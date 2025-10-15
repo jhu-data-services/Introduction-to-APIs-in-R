@@ -1,0 +1,115 @@
+---
+title: "Introduction to APIs in R"
+format: 
+    revealjs:
+        incremental: true
+---
+
+## Learning Objectives
+
+By the end of this workshop, you should be able to: 
+
+- Explain what an API is.
+- Be able to use API documentation to explore available API endpoints.
+- Fetch data from an API using the `httr2` library.
+- Understand pagination and be able to apply strategies to work with API limits. 
+
+## Ways of accessing data
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+#### Manual 
+
+- Download files from the web (CSV, Excel, Text, Parquet, etc.)
+- Copy manually from websites (tables, charts, text)
+- Extract data from documents (Word  or PDFs)
+
+:::
+
+
+::: {.column width="60%"}
+
+#### Automatic
+
+- Databases
+- APIs
+- Web Scraping (Extract information from web pages programmatically)
+- Sensors
+:::
+
+::::
+
+
+## Why use an API?
+
+- You need the most up-to-date information.
+- You don't need everything - you can ask for exactly what you want.
+- It's repeatable - you can write code once, and reuse everytime you need new data.
+  
+## What is an API?
+
+. . . 
+
+API stands for:
+
+**A**pplication **P**rogramming **I**nterface
+
+## Types of APIs
+
+. . .
+
+**SOAP** 
+
+- Legacy API, used primarily for banking and healthcare
+- Data is delivered as `XML`
+- Much more complex to implement and use
+
+**REST**: 
+
+- The standard for accessing data on the web
+- Flexible: can deliver data in `XML` or `JSON`
+
+## Structure of an API Request
+
+## Structure of an API Response
+
+Each API response is composed of two parts:
+
+. . . 
+
+**header**: information about the data 
+
+. . . 
+
+**body**: the data
+
+. . .
+
+![](https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png)
+
+Think of an API response like an envelope you received in the mail. 
+
+## 
+
+On the outside of the envelope there is information like:
+
+- The address it was addressed to
+- The address where it came from
+- The postage date, which indicates when it was posted
+
+. . . 
+
+This metadata, or "data about data", tells you about the letter contained within --- who sent it, to whom, and when?. 
+
+. . .
+
+In an API response this is the API **header**. It contains information about the data being delivered. 
+
+. . .
+
+The **body** of the API contains the actual contents of the letter (the data).
+
+## 
+
