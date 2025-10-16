@@ -7,81 +7,152 @@ format:
 
 ## Learning Objectives
 
-By the end of this workshop, you should be able to: 
+By the end of this workshop, you should be able to:
 
-- Explain what an API is.
-- Be able to use API documentation to explore available API endpoints.
-- Fetch data from an API using the `httr2` library.
-- Understand pagination and be able to apply strategies to work with API limits. 
+-   Explain what an API is.
+-   Be able to use API documentation to explore available API endpoints.
+-   Fetch data from an API using the `httr2` library.
+-   Understand pagination and be able to apply strategies to work with API limits.
 
 ## Ways of accessing data
 
-:::: {.columns}
+. . .
 
+::::: columns
 ::: {.column width="40%"}
+#### Manual
 
-#### Manual 
-
-- Download files from the web (CSV, Excel, Text, Parquet, etc.)
-- Copy manually from websites (tables, charts, text)
-- Extract data from documents (Word  or PDFs)
-
+-   Download files from the web (CSV, Excel, Text, Parquet, etc.)
+-   Copy manually from websites (tables, charts, text)
+-   Extract data from documents (Word or PDFs)
 :::
-
 
 ::: {.column width="60%"}
-
 #### Automatic
 
-- Databases
-- APIs
-- Web Scraping (Extract information from web pages programmatically)
-- Sensors
+-   Databases
+-   APIs
+-   Web Scraping (Extract information from web pages programmatically)
+-   Sensors
 :::
-
-::::
-
+:::::
 
 ## Why use an API?
 
-- You need the most up-to-date information.
-- You don't need everything - you can ask for exactly what you want.
-- It's repeatable - you can write code once, and reuse everytime you need new data.
-  
+-   You need the most up-to-date information.
+-   You don't need everything - you can ask for exactly what you want.
+-   It's repeatable - you can write code once, and reuse everytime you need new data.
+
 ## What is an API?
 
-. . . 
+. . .
 
 API stands for:
 
 **A**pplication **P**rogramming **I**nterface
 
+. . .
+
+An API provides a way to communicate between your computer (the client) and a remote web service (the server).
+
+## Lets get cooking 🌶️ 
+
+. . .
+
+You go to a restaurant.
+
+. . .
+
+Rather than waiting to be seated you poke your head into the kitchen, and ask for a grilled cheese sandwich.
+
+. . .
+
+The chef promptly throws a spatula at your head. Now you have nothing to show for your effort but a head injury.
+
+## 
+
+What went wrong?
+
+. . .
+
+You need someone to translate your request in a way the chef understands!
+
+. . .
+
+You need an **API**!
+
+## 
+
+Let's try this again.
+
+. . .
+
+You (the **client**) enter the restaurant and are seated.
+
+. . .
+
+A waiter (the **API**) arrives to take your order. You ask for a grilled cheese, extra cheese, with tomato. The waiter notes your order on a slip of paper (the **request**), which he posts on the turnstile at the kitchen.
+
+. . .
+
+The chef (**server**) reviews the request's instructions, prepares a grilled cheese sandwich , and places it on the kitchen window, and hit's a bell.
+
+. . .
+
+Your server, hearing the bell, brings you the grilled cheese sandwhich (the **response**), along with an apology from the chef for the head injury.
+
+## 
+
+Placeholder image of API
+
 ## Types of APIs
 
 . . .
 
-**SOAP** 
+**SOAP**
 
-- Legacy API, used primarily for banking and healthcare
-- Data is delivered as `XML`
-- Much more complex to implement and use
+-   Legacy API, used primarily for banking and healthcare
+-   Data is delivered as `XML`
+-   Much more complex to implement and use
 
-**REST**: 
+. . .
 
-- The standard for accessing data on the web
-- Flexible: can deliver data in `XML` or `JSON`
+**REST**:
 
-## Structure of an API Request
+-   The standard for accessing data on the web
+-   Flexible: can deliver data in `XML` or `JSON`
+
+. . .
+
+**REST** stands for **RE**presentational **S**tate **T**ransfer
+
+## Requests
+
+When you want data from an API, you send a **request**. This request contains:
+
+-   The **name** of the resource you would like to access (data)
+-   A **verb** indicating what you want to do with the data.
+
+## REST Verbs
+
+-   **Get**: Get a single or multiple items
+-   **Post**: Create an item
+-   **Put**: Update an item
+-   **Delete**: Delete an item
+
+. . .
+
+> We will concern ourselves entirely with **get** because we are interested in using web APIs to retrieve data.
 
 ## Structure of an API Response
 
 Each API response is composed of two parts:
 
-. . . 
+. . .
 
-**header**: information about the data 
+**header**: information about the data
 
-. . . 
+. . .
 
 **body**: the data
 
@@ -89,27 +160,167 @@ Each API response is composed of two parts:
 
 ![](https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png)
 
-Think of an API response like an envelope you received in the mail. 
+Think of an API response like an envelope you received in the mail.
 
 ## 
 
 On the outside of the envelope there is information like:
 
-- The address it was addressed to
-- The address where it came from
-- The postage date, which indicates when it was posted
-
-. . . 
-
-This metadata, or "data about data", tells you about the letter contained within --- who sent it, to whom, and when?. 
+-   The address it was addressed to
+-   The address where it came from
+-   The postage date, which indicates when it was posted
 
 . . .
 
-In an API response this is the API **header**. It contains information about the data being delivered. 
+This metadata, or "data about data", tells you about the letter contained within --- who sent it, to whom, and when?.
+
+. . .
+
+In an API response this is the API **header**. It contains information about the data being delivered.
 
 . . .
 
 The **body** of the API contains the actual contents of the letter (the data).
 
-## 
+## API Endpoints
+
+An API **endpoint** is a gateway where data is sent and received. 
+
+In RESTful web APIs, this corresponds to a URL.
+
+. . .
+
+
+`https://pokeapi.co/api/v2/`
+
+## API Endpoints
+
+An API **endpoint** is a gateway where data is sent and received. 
+
+In RESTful web APIs, this corresponds to a URL.
+
+
+`https://pokeapi.co/api/v2/{endpoint}`
+
+
+## Ability
+
+Abilities provide passive effects for Pokémon in battle or in the overworld. 
+
+. . . 
+
+`https://pokeapi.co/api/v2/ability`
+
+. . .
+
+```JSON
+{
+  "count": 367,
+  "next": "https://pokeapi.co/api/v2/ability/?offset=20&limit=20",
+  "previous": null,
+  "results": [
+    {
+      "name": "stench",
+      "url": "https://pokeapi.co/api/v2/ability/1/"
+    },
+    {
+      "name": "drizzle",
+      "url": "https://pokeapi.co/api/v2/ability/2/"
+    },
+    {
+      "name": "speed-boost",
+      "url": "https://pokeapi.co/api/v2/ability/3/"
+    },
+    {
+      "name": "battle-armor",
+      "url": "https://pokeapi.co/api/v2/ability/4/"
+    },
+    {
+      "name": "sturdy",
+      "url": "https://pokeapi.co/api/v2/ability/5/"
+    },
+```
+
+## Item
+
+An item is an object in the games which the player can pick up, keep in their bag, and use in some manner. They have various uses, including healing, powering up, helping catch Pokémon, or to access a new area.
+
+`https://pokeapi.co/api/v2/item`
+
+. . . 
+
+```JSON
+{
+  "count": 2180,
+  "next": "https://pokeapi.co/api/v2/item/?offset=20&limit=20",
+  "previous": null,
+  "results": [
+    {
+      "name": "master-ball",
+      "url": "https://pokeapi.co/api/v2/item/1/"
+    },
+    {
+      "name": "ultra-ball",
+      "url": "https://pokeapi.co/api/v2/item/2/"
+    },
+    {
+      "name": "great-ball",
+      "url": "https://pokeapi.co/api/v2/item/3/"
+    },
+    {
+      "name": "poke-ball",
+      "url": "https://pokeapi.co/api/v2/item/4/"
+    },
+    {
+      "name": "safari-ball",
+      "url": "https://pokeapi.co/api/v2/item/5/"
+    },
+    {
+      "name": "net-ball",
+      "url": "https://pokeapi.co/api/v2/item/6/"
+    },
+    {
+      "name": "dive-ball",
+      "url": "https://pokeapi.co/api/v2/item/7/"
+    },
+    {
+      "name": "nest-ball",
+      "url": "https://pokeapi.co/api/v2/item/8/"
+    },
+    {
+      "name": "repeat-ball",
+      "url": "https://pokeapi.co/api/v2/item/9/"
+```
+##  {data-background-iframe="https://pokeapi.co/"}
+
+## Pagination
+
+. . .
+
+In APIs there is often more data than can be returned with a single API response. Addditionally, APIs often enact limits on the number of results that can be returned over a given time period.
+
+. . .
+
+Instead, records are provided in subsets or "pages" of data. 
+
+. . .
+
+Which "pages" or range of records are provided are controlled by two parameters:
+
+. . . 
+
+**limit**: The total number of records to be returned by the API.
+
+. . .
+
+**offset**: How many records to skip before records are returned.
+
+
+### API Tokens
+
+API Tokens are small alphanumeric strings used to validate your API request.
+
+. . . 
+
+It provides a way of telling the server that you are a legitimate user of the API.
 
