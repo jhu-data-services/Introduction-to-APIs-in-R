@@ -136,3 +136,5 @@ pokemon_stats <- map_dfr(pokemon_names$url, get_pokemon_details)
 datatable(data = pokemon_stats, escape = FALSE)
 
 ## Be Kind - Cache your Data!
+
+## Let's practice credentialling with an API Key. What's the weather on mars?

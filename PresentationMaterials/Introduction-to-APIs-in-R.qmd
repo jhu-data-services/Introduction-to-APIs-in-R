@@ -3,6 +3,7 @@ title: "Introduction to APIs in R"
 format: 
     revealjs:
         incremental: true
+        code-line-numbers: false
 ---
 
 ## Learning Objectives
@@ -13,6 +14,7 @@ By the end of this workshop, you should be able to:
 -   Be able to use API documentation to explore available API endpoints.
 -   Fetch data from an API using the `httr2` library.
 -   Understand pagination and be able to apply strategies to work with API limits.
+-   Use, and secure, an API key.
 
 ## Ways of accessing data
 
@@ -55,7 +57,11 @@ API stands for:
 
 An API provides a way to communicate between your computer (the client) and a remote web service (the server).
 
-## Lets get cooking 🌶️ 
+. . .
+
+![](https://voyager.postman.com/illustration/diagram-what-is-an-api-postman-illustration.svg)
+
+## Lets get cooking 🌶️
 
 . . .
 
@@ -103,28 +109,24 @@ Your server, hearing the bell, brings you the grilled cheese sandwhich (the **re
 
 ## 
 
-Placeholder image of API
+![](https://voyager.postman.com/illustration/diagram-what-is-an-api-postman-illustration.svg)
+
+- **Client**: Requests grilled cheese
+- **API**: Receives request and delivers to kitchen
+- **Server**: Reviews request and generates **response** (grilled cheese)
+- **API**: delivers response to client
+
 
 ## Types of APIs
 
-. . .
+. . . 
 
-**SOAP**
+**SOAP** (legacy): XML-based, structured, rigid (common in banking/healthcare)  
 
--   Legacy API, used primarily for banking and healthcare
--   Data is delivered as `XML`
--   Much more complex to implement and use
+ . . . 
 
-. . .
+**REST** (modern): Flexible, human-readable, usually returns JSON.
 
-**REST**:
-
--   The standard for accessing data on the web
--   Flexible: can deliver data in `XML` or `JSON`
-
-. . .
-
-**REST** stands for **RE**presentational **S**tate **T**ransfer
 
 ## Requests
 
@@ -133,16 +135,43 @@ When you want data from an API, you send a **request**. This request contains:
 -   The **name** of the resource you would like to access (data)
 -   A **verb** indicating what you want to do with the data.
 
-## REST Verbs
+## REST and HTTP Methods
 
--   **Get**: Get a single or multiple items
--   **Post**: Create an item
--   **Put**: Update an item
--   **Delete**: Delete an item
+Common **verbs** in Rest APIs:
+
+-   **Get**: Retreive data (most common)
+-   **Post**: Create data
+-   **Put**: Update data
+-   **Delete**: Remove data
 
 . . .
 
-> We will concern ourselves entirely with **get** because we are interested in using web APIs to retrieve data.
+For data retrieval, we use **GET**.
+
+. . . 
+
+Example:  
+`GET https://pokeapi.co/api/v2/pokemon?limit=3&offset=0`
+
+---
+
+## API Request Structure
+
+A typical API request has four main parts:
+
+1. **HTTP Verb**: what we are doing 
+   `GET`
+2. **Base URL**: main address
+   `https://pokeapi.co/api/v2`
+3. **Endpoint**: the specific resource we are acting on 
+   `/pokemon`
+4. **Query Parameters**: optional filters  
+   `?limit=3&offset=10`
+
+. . .
+
+Full request:  
+`https://pokeapi.co/api/v2/pokemon?limit=3&offset=10`
 
 ## Structure of an API Response
 
@@ -154,13 +183,16 @@ Each API response is composed of two parts:
 
 . . .
 
-**body**: the data
+**body**: the data (usually JSON)
 
 . . .
 
-![](https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png)
-
 Think of an API response like an envelope you received in the mail.
+
+. . .
+
+![](https://upload.wikimedia.org/wikipedia/commons/7/7f/Envelope_-_Boonville_Address-000.jpg)
+
 
 ## 
 
@@ -182,38 +214,65 @@ In an API response this is the API **header**. It contains information about the
 
 The **body** of the API contains the actual contents of the letter (the data).
 
+## 
+
+![](https://substackcdn.com/image/fetch/$s_!t3KC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3e7545dc-245a-4016-8dd7-7ec1f144dd50_1697x1089.jpeg)
+
+
+## Status Code
+
+The **status code** tells you whether the request succeeded or failed  
+ 
+. . . 
+
+Status codes are 3-digit numbers returned by the server that describe the result of your request.
+
+| Code | Meaning | Description |
+|------|----------|-------------|
+| **200** | ✅ OK | The request succeeded — data is returned. |
+| **201** | 🆕 Created | A new resource was successfully created. |
+| **400** | ⚠️ Bad Request | The request was malformed or invalid. |
+| **401** | 🔐 Unauthorized | Missing or invalid API key. |
+| **403** | 🚫 Forbidden | You don’t have permission to access the resource. |
+| **404** | ❓ Not Found | The endpoint or item doesn’t exist. |
+| **429** | 🕐 Too Many Requests | You’ve hit the API’s rate limit. |
+| **500** | 💥 Server Error | Something went wrong on the server side. |
+
 ## API Endpoints
 
-An API **endpoint** is a gateway where data is sent and received. 
+An API **endpoint** is a gateway where data is sent and received.
 
 In RESTful web APIs, this corresponds to a URL.
 
 . . .
-
 
 `https://pokeapi.co/api/v2/`
 
 ## API Endpoints
 
-An API **endpoint** is a gateway where data is sent and received. 
+An API **endpoint** is a gateway where data is sent and received.
 
 In RESTful web APIs, this corresponds to a URL.
 
-
 `https://pokeapi.co/api/v2/{endpoint}`
 
+## JSON
 
-## Ability
+The **body** of the response is often returned in a human readable format called `JSON` or Javascript Object Notation.
 
-Abilities provide passive effects for Pokémon in battle or in the overworld. 
+## Abilities 
 
-. . . 
-
-`https://pokeapi.co/api/v2/ability`
+Abilities provide passive effects for Pokémon in battle or in the overworld.
 
 . . .
 
-```JSON
+`GET https://pokeapi.co/api/v2/ability`
+
+. . .
+
+. . . 
+
+``` json
 {
   "count": 367,
   "next": "https://pokeapi.co/api/v2/ability/?offset=20&limit=20",
@@ -245,11 +304,13 @@ Abilities provide passive effects for Pokémon in battle or in the overworld.
 
 An item is an object in the games which the player can pick up, keep in their bag, and use in some manner. They have various uses, including healing, powering up, helping catch Pokémon, or to access a new area.
 
-`https://pokeapi.co/api/v2/item`
-
 . . . 
 
-```JSON
+`GET https://pokeapi.co/api/v2/item`
+
+. . .
+
+``` json
 {
   "count": 2180,
   "next": "https://pokeapi.co/api/v2/item/?offset=20&limit=20",
@@ -291,36 +352,97 @@ An item is an object in the games which the player can pick up, keep in their ba
       "name": "repeat-ball",
       "url": "https://pokeapi.co/api/v2/item/9/"
 ```
-##  {data-background-iframe="https://pokeapi.co/"}
 
-## Pagination
+## Pagination 📄
 
-. . .
-
-In APIs there is often more data than can be returned with a single API response. Addditionally, APIs often enact limits on the number of results that can be returned over a given time period.
+Many APIs return only part of the dataset at once.
 
 . . .
 
-Instead, records are provided in subsets or "pages" of data. 
+Addditionally, APIs often enact limits on the number of results that can be returned over a given time period.
 
 . . .
 
-Which "pages" or range of records are provided are controlled by two parameters:
+Which parts of the dataset are returned are controlled by two parameters:
+
+. . .
+
+**limit**: how many records to return
+
+. . .
+
+**offset**: how many records to skip
+
+. . .
+
+To get all results, you can loop over offsets:
+
+. . .
+
+"https://pokeapi.co/api/v2/item/?offset=20&limit=20"
+
+
+## API Key 🔑
 
 . . . 
 
-**limit**: The total number of records to be returned by the API.
+Many APIs require something called an **API Key**
 
 . . .
 
-**offset**: How many records to skip before records are returned.
+An API key is a unique code used to identify and authenticate a user or application when interacting with an API.
 
+. . .
 
-### API Tokens
+API keys are generally a string of alphanumeric characters, and look something like this:
 
-API Tokens are small alphanumeric strings used to validate your API request.
+. . .
+
+`zaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtlx`
+
+. . .
+
+API keys are a security measure to make sure you, or your application, are who you say you are.
+
+## API Key 🔑
+
+An API key is like an ID card. You wouldn’t leave your ID card laying around. Anyone could just pick it up and pretend they are you!
+
+. . .
+
+If you store plaintext API keys in code and share it (e.g., on GitHub), anyone with access can read it!
+
+. . .
+
+```R
+library(tidycensus)
+library(tidyverse)
+
+census_api_key("zaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtl")
+
+# Retrieve median age by sex (P13_001N) by state
+age_2020 <- get_decennial(geography = "state", 
+                       variables = "P13_001N", 
+                       year = 2020,
+                       sumfile = "dhc")
+```
+
+## How do we protect our API keys? 
+
+![](https://media.tenor.com/BxBXA_6u-PQAAAAC/lotr-keep-it-safe.gif)
+
+## Environment Variables
+
+A variable allows us to store information, and an environment is the system we ecute our code on. 
 
 . . . 
 
-It provides a way of telling the server that you are a legitimate user of the API.
+Environment variables allow us to store information specific to a system in variables. 
 
+. . . 
+
+Environment variables are not stored within our codebase, but are instead stored in a system specific configuration file.
+
+. . . 
+
+We can use the environment variables configuration file to store our API key, and reference the configuration file in our code in order to load the API key.
