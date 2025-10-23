@@ -1,0 +1,249 @@
+---
+title: "Introduction to APIs in R"
+subtitle: Introduction to APIs in R workshop by JHU Data Services - October 22nd, 2025
+author: Peter Lawson, PhD
+date: 10/22/2025
+format: html
+---
+
+
+```{r}
+#| echo: false
+#| message: false 
+hook_output = knitr::knit_hooks$get("output")
+knitr::knit_hooks$set(output = function(x, options) {
+  n = options$out.lines
+  if (is.null(n)) {
+    hook_output(x, options)
+  } else {
+    x = xfun::split_lines(x)
+    if (length(x) > n) {
+      # Truncate output and add ellipsis
+      x = c(head(x, n), "....")
+    }
+    # Restore the original output hook for the modified output
+    hook_output(paste(x, collapse = "\n"), options)
+  }
+})
+```
+
+## Introduction
+This document has the completed code for the [Johns Hopkins Data Services](https://dataservices.library.jhu.edu/) October 22nd session **Introduction to APIs in R**.
+
+### Load Libraries
+```{r}
+#| message: false
+## Library for working with RESTful APIs 
+library(httr2)
+
+## Libraries for data processing
+library(purrr)
+library(dplyr)
+library(tibble)
+
+## Library for viewing dataframe as HTML table
+library(DT)
+```
+
+
+## Introduction to Requests 
+
+Use the [PokeAPI](https://pokeapi.co/) to extract basic information about Pokémon using a series of API requests.
+
+### Set the url for the API and set our endpoint (`pokemon`)
+```{r}
+base_url <- 'https://pokeapi.co/api/v2/'
+endpoint <- 'pokemon'
+```
+
+### Use `req_url_path_append()` to construct the endpoint path
+```{r}
+request <- request(base_url) |> 
+    req_url_path_append(endpoint)
+```
+
+We can see the get request formed by our request function:
+
+```{r}
+request
+```
+
+### Generate a response by performing our request using `req_perform(request)`
+
+```{r}
+response <- req_perform(request)
+```
+
+Let's take a look at the contents of our raw response body: 
+
+```{r}
+#| out.lines: 10
+response$body
+```
+
+We see that our output is raw byte codes - as series of two character hexadecimal values. This is because we need to tell the `httr2` library to intepret the body as a `JSON`. We can use `glimpse()` to make our `JSON` output more readable.
+
+
+```{r}
+#| out.lines: 15
+response |> 
+    resp_body_json() |> 
+    glimpse()
+```
+
+### Request a specific pokemon endpoint
+- Define an endpoint for **bulbasaur**
+- Perform the request
+- Display the response
+
+```{r}
+#| out.lines: 15
+response <- request(base_url) |>
+    req_url_path_append(endpoint, 'bulbasaur') |> 
+    req_perform() |> 
+    resp_body_json()
+
+response |> glimpse()
+```
+
+### Extract data from a `JSON` into a tibble (dataframe)
+
+`JSON` data is variably nested and can be difficult to work with. For example, what if we want to retrieve the stats for bulbasaur and format it like:
+
+| Stat Name | Stat |
+| :--- | :---: | 
+| HP | 30 | 
+| Attack | 25 | 
+| Defense | 35 | 
+
+We can see that stats are nested in a hierarchy of lists, and are difficult to retreive by name:
+
+```{r}
+str(response$stats)
+```
+
+One strategy is to iterate over all six outer lists, each of which corresponds to a single statistics, and then extract the relevant information from the inner lists.
+
+We can do this using the `map_df()` function from the `purrr` library. The `map_df()` iterates, or "maps", over each list, allows us to perform a function, and returns the result as a dataframe.
+
+The function takes the form `map_df(my_list, ~ function(.x))` where the `~` represents an anonymous function that allows us to reference each list as `.x`. 
+
+We can extract all of the stats into a dataframe using:
+
+
+```{r}
+stats <- map_df(
+  response$stats,
+  ~ tibble(stat_name = .x$stat$name, stat = .x$base_stat)
+)
+```
+
+which gives us:
+
+```{r}
+stats
+```
+
+The rest of the data is easier to extract from `response`, so by using both our `stats` tibble we created, as well as the original `response`, we can create a tibble of bulbasaur stats:
+
+
+```{r}
+bulbasaur_stats <- tibble(
+  sprite = response$sprites$front_default,
+  species = response$species$name,
+  height = response$height,
+  weight = response$weight,
+  hp = stats$stat[stats$stat_name == "hp"],
+  defense = stats$stat[stats$stat_name == "defense"],
+  attack = stats$stat[stats$stat_name == "attack"])
+
+bulbasaur_stats
+```
+
+## Using pagination to request data for 100 pokemon
+
+What if we want stats for more than one pokemon? We need to find some way of making multiple requests for each pokemon.
+
+Let's create a request for 20 pokemon. We can use `req_url_query()` to pass specific parameters to our get request; in this case we will pass `limit=20` to request 20 records:
+
+```{r}
+request <- request(base_url) |> 
+    req_url_path_append('pokemon') |> 
+    req_url_query(limit = 20)
+```
+
+If we perform a single request, and examine it, we see an interesting attribute - `next`:
+
+```{r}
+response <- req_perform(request) |> resp_body_json()
+response$`next`
+```
+
+Next is delivered as part of our `JSON`. It tells us, if we wanted the next batch of records, exactly what API call we would need to make. We can think of these as a chain of API calls that allow us to iterate through all records available to us:
+
+`...okemon?offset=20&limit=20"` -> 
+`...okemon?offset=40&limit=20"` -> 
+`...okemon?offset=60&limit=20"` ...
+
+and so on until we end up reaching the end, which we know is the end because `next == NULL` - there are no more records past the last API call.
+
+So how do we request multiple pokemon stats? There are different strategies, which you will find is often the case when working with APIs. We will:
+
+1. Use the `req_perform_iterative()` function to iterate over multiple batches of records until we have all 1,328 pokemon. Learn more about [req_perform_iterative](https://httr2.r-lib.org/reference/req_perform_iterative.html).
+2. Create our own function, `req_paged_next()` which will help us update each step of `req_perform_iterative()` to use the next record available.
+3. Iterate over all of the responses, and extract the name and url endpoint for each pokemon.
+4. Create a function that generalizes the process of extracting pokemon statistics from a JSON, as we did with **bulbasaur**. 
+5. Using the list of pokemon URLs, make 1,328 API requests, one for each pokemon, and extract the statistics for each pokemon.
+   
+We can extract all the pokemon using:
+
+
+```{r}
+#| eval: false
+responses <- req_perform_iterative(
+    request,
+    next_req = SOME_HELPER_FUNCTION,
+    on_error = "return" # If request fails, stop and return what you have
+)
+```
+
+`next_req` take's a function, with the arguments (`resp`, `req`). 
+
+Normally we could use one of the `httr2` provided [iteration helper](https://httr2.r-lib.org/reference/iterate_with_offset.html) functions to help us iterate over.
+
+::: callout-note
+These functions are intended for use with the `next_req` argument to `req_perform_iterative()`.  
+Each implements iteration for a common pagination pattern:
+:::
+
+- `iterate_with_offset()` — increments a query parameter, e.g. `?page=1`, `?page=2`, or `?offset=1`, `offset=21`.
+- `iterate_with_cursor()` — updates a query parameter with the value of a cursor found somewhere in the response.
+- `iterate_with_link_url()` — follows the URL found in the `Link` header. See `resp_link_url()` for more details.
+
+The problem is, our `next` url is not included in the `Link` header, as is common, but is instead part of our `JSON`. This means we will need to write and provide a custom function to provide it to `req_perform_iterative`.
+
+### Let's build a next page handler
+
+Our next page handler takes two arguments, `resp` and `req`. These stand for response and request, respectively. We must use these abbreviations, because that is what the `req_perform_iterative` `next_req` argument expects.
+
+Our next page handler does the following:
+
+1. Extracts the JSON body: `resp_body_json(resp)`
+2. Grabs the next url `response_body$`next``
+3. Checks if the next URL is NULL, and returns NULL if so. `if (is.null(next_url)){return(NULL)}`
+4. Otherwise updates the request with the new URL: `req |> req_url(next_url)`
+
+```{r}
+next_page_handler <- function(resp, req) {
+  response_body <- resp_body_json(resp)
+  next_url <- response_body$`next`
+  ## Error handling - if we get to a next that returns NULL
+  ## then we stop. Otherwise keep navigating through our 
+  ## chain of next URLs.
+  if (is.null(next_url)) {
+    return(NULL)
+  } else {
+    req |> req_url(next_url)
+  }
+}
+```
