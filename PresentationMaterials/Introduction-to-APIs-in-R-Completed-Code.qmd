@@ -3,7 +3,9 @@ title: "Introduction to APIs in R"
 subtitle: Introduction to APIs in R workshop by JHU Data Services - October 22nd, 2025
 author: Peter Lawson, PhD
 date: 10/22/2025
-format: html
+format: 
+  html:
+    toc: true
 ---
 
 
@@ -106,6 +108,7 @@ response <- request(base_url) |>
 response |> glimpse()
 ```
 
+## Manipulating `JSON` data
 ### Extract data from a `JSON` into a tibble (dataframe)
 
 `JSON` data is variably nested and can be difficult to work with. For example, what if we want to retrieve the stats for bulbasaur and format it like:
@@ -160,7 +163,9 @@ bulbasaur_stats <- tibble(
 bulbasaur_stats
 ```
 
-## Using pagination to request data for 100 pokemon
+## Pagination 
+
+### Using pagination to request data for 100 pokemon
 
 What if we want stats for more than one pokemon? We need to find some way of making multiple requests for each pokemon.
 
@@ -246,4 +251,160 @@ next_page_handler <- function(resp, req) {
     req |> req_url(next_url)
   }
 }
+```
+
+
+We can avoid hitting any API limits by using `req_throttle()` in `request()` to ensure we never exceed a specified rate.
+
+Throttling is implemented using a "token bucket", which fills up to a maximum of capacity tokens over `fill_time_s` (fill time in seconds). Each time you make a request, it takes a token out of the bucket, and if the bucket is empty, the request will wait until the bucket refills. This ensures that you never make more than `capacity` requests in `fill_time_s`.
+
+
+```{r}
+request <- request("https://pokeapi.co/api/v2/pokemon") |> 
+  req_url_query(limit = 20) |> 
+  req_throttle(capacity = 10, fill_time_s = 60)
+```
+
+Now let's get all the first 100 pokemon (by setting `max_reqs = 5`). We can get all the pokemon by setting `max_reqs = Inf`, but be cautious of API limits.
+
+```{r}
+responses <- httr2::req_perform_iterative(
+  request,
+  next_req = next_page_handler,
+  max_reqs = 5,
+  on_error = "return"
+)
+```
+
+
+Now we can use `map_dfr()` to iterate over each response and extract the results.
+
+
+```{r}
+pokemon_names <-
+  purrr::map_dfr(responses, function(response) {
+    body <- httr2::resp_body_json(response)
+    purrr::map_dfr(body$results, tibble::as_tibble)
+  })
+
+pokemon_names
+```
+
+### Retreive statistics for each pokemon through multiple API calls
+
+In order to retrieve statsitics for each pokemon, we can iterate over each URL in `pokemon_names` and make a request for the specific pokemon endpoint represented by that url. To do this, we can build on our approach for extracting statistics from one pokemon, and build a function for multiple.
+
+
+```{r}
+get_pokemon_details <- function(url) {
+
+  response <- request(url) |> req_perform() |> resp_body_json()
+
+  ## We don't have ways to limit the number of requests over
+  ## a given time period, so we can use Sys.sleep to pause our
+  ## function before each request to ensure we don't exceed 
+  ## API limits.
+  Sys.sleep(.1)
+  
+
+  stats <- purrr:::map_df(
+    response$stats,
+    ~ tibble(stat_name = .x$stat$name, stat = .x$base_stat)
+  )
+
+  tibble(
+    sprite = response$sprites$front_default,
+    name = response$name,
+    height = response$height,
+    weight = response$weight,
+    hp = stats$stat[stats$stat_name == "hp"],
+    defense = stats$stat[stats$stat_name == "defense"],
+    attack = stats$stat[stats$stat_name == "attack"]
+  ) |>
+    ## This mutate function wraps each sprite url in 
+    ## <img src="SPRITE_URL"height="50"></img> so it can
+    ## be displayed in an HTML table using the DT library
+    mutate(sprite = paste0('<img src="', sprite, '" height="50"></img>'))
+}
+```
+
+Now iterate over each pokemon URL and excecute the `get_pokemon_details` function to retrieve each pokemon's statistics:
+
+```{r}
+pokemon_stats <- map_dfr(pokemon_names$url, get_pokemon_details)
+```
+
+Finally, display our resultant table:
+
+
+```{r}
+datatable(data = pokemon_stats, escape = FALSE)
+```
+
+## API key privacy
+
+What if you are working with an API that requires an API key? 
+
+For example, let's use the NASA API to retreive weather data on mars:
+
+This API is a little different. We have to specify our data type (JSON) and our API version (1.0) as parameters in our GET request:
+
+```{r}
+#| error: true
+nasa_base_url <- 'https://api.nasa.gov/'
+
+req <- request(nasa_base_url) |>
+  req_url_path_append('insight_weather/') |>
+  req_url_query(feedtype = "json", ver = "1.0") |>
+  req_perform()
+
+req
+```
+
+We see that when we run it, we get a 403 HTTP error. We are not considered a valid user unless we provide an API key.
+
+You can register for an API key with nothing but an email at [https://api.nasa.gov/](https://api.nasa.gov/), or we can use the demo key that NASA provides for experimenting with their API (although it does have lower API limits than if you use your own key).
+
+
+```{r}
+api_key <- 'DEMO_KEY'
+
+req <- request(nasa_base_url) |>
+  req_url_path_append('insight_weather/') |>
+  req_url_query(feedtype = "json", ver = "1.0", api_key = api_key) |>
+  req_perform()
+  
+req
+```
+
+Now that we passed the `api_key` as a parameter, we received a valid response (HTTP 200). 
+
+We don't want to store that API key in plaintext though - anyone could steal it! Let's store it as an environmental variable. To do that, you can add it to your `.Renviron` file in your home directory. 
+
+You can use an R package to edit that file directly in RStudio: `usethis`.
+
+`usethis` is a workflow package: it automates repetitive tasks that arise during project setup and development, both for R packages and non-package projects.
+
+
+```{r}
+library(usethis)
+edit_r_environ()
+```
+
+An editor window will open, and you can add the following (replacing `"DEMO_KEY"` with your own API key, if you registered for one)
+
+```API_KEY = "DEMO_KEY"```
+
+Now you can load your API key from your `.Renviron` file by first restarting R, and then:
+
+```{r}
+api_key <- Sys.getenv("API_KEY")
+nasa_base_url <- 'https://api.nasa.gov/'
+
+req <- request(nasa_base_url) |>
+  req_url_path_append('insight_weather/') |>
+  req_url_query(feedtype = "json", ver = "1.0", api_key = api_key) |>
+  req_perform()
+  
+req
 ```
