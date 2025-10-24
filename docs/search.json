@@ -1,0 +1,506 @@
+[
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "This document has the completed code for the Johns Hopkins Data Services October 22nd session Introduction to APIs in R.\n\n\n\n## Library for working with RESTful APIs \nlibrary(httr2)\n\n## Libraries for data processing\nlibrary(purrr)\nlibrary(dplyr)\nlibrary(tibble)\n\n## Library for viewing dataframe as HTML table\nlibrary(DT)"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#introduction",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#introduction",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "This document has the completed code for the Johns Hopkins Data Services October 22nd session Introduction to APIs in R.\n\n\n\n## Library for working with RESTful APIs \nlibrary(httr2)\n\n## Libraries for data processing\nlibrary(purrr)\nlibrary(dplyr)\nlibrary(tibble)\n\n## Library for viewing dataframe as HTML table\nlibrary(DT)"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#introduction-to-requests",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#introduction-to-requests",
+    "title": "Introduction to APIs in R",
+    "section": "Introduction to Requests",
+    "text": "Introduction to Requests\nUse the PokeAPI to extract basic information about Pokémon using a series of API requests.\n\nSet the url for the API and set our endpoint (pokemon)\n\nbase_url &lt;- 'https://pokeapi.co/api/v2/'\nendpoint &lt;- 'pokemon'\n\n\n\nUse req_url_path_append() to construct the endpoint path\n\nrequest &lt;- request(base_url) |&gt; \n    req_url_path_append(endpoint)\n\nWe can see the get request formed by our request function:\n\nrequest\n\n&lt;httr2_request&gt;\nGET https://pokeapi.co/api/v2/pokemon\nBody: empty\n\n\n\n\nGenerate a response by performing our request using req_perform(request)\n\nresponse &lt;- req_perform(request)\n\nLet’s take a look at the contents of our raw response body:\n\nresponse$body\n\n   [1] 7b 22 63 6f 75 6e 74 22 3a 31 33 32 38 2c 22 6e 65 78 74 22 3a 22 68 74\n  [25] 74 70 73 3a 2f 2f 70 6f 6b 65 61 70 69 2e 63 6f 2f 61 70 69 2f 76 32 2f\n  [49] 70 6f 6b 65 6d 6f 6e 3f 6f 66 66 73 65 74 3d 32 30 26 6c 69 6d 69 74 3d\n  [73] 32 30 22 2c 22 70 72 65 76 69 6f 75 73 22 3a 6e 75 6c 6c 2c 22 72 65 73\n  [97] 75 6c 74 73 22 3a 5b 7b 22 6e 61 6d 65 22 3a 22 62 75 6c 62 61 73 61 75\n [121] 72 22 2c 22 75 72 6c 22 3a 22 68 74 74 70 73 3a 2f 2f 70 6f 6b 65 61 70\n [145] 69 2e 63 6f 2f 61 70 69 2f 76 32 2f 70 6f 6b 65 6d 6f 6e 2f 31 2f 22 7d\n [169] 2c 7b 22 6e 61 6d 65 22 3a 22 69 76 79 73 61 75 72 22 2c 22 75 72 6c 22\n [193] 3a 22 68 74 74 70 73 3a 2f 2f 70 6f 6b 65 61 70 69 2e 63 6f 2f 61 70 69\n [217] 2f 76 32 2f 70 6f 6b 65 6d 6f 6e 2f 32 2f 22 7d 2c 7b 22 6e 61 6d 65 22\n....\n\n\nWe see that our output is raw byte codes - as series of two character hexadecimal values. This is because we need to tell the httr2 library to intepret the body as a JSON. We can use glimpse() to make our JSON output more readable.\n\nresponse |&gt; \n    resp_body_json() |&gt; \n    glimpse()\n\nList of 4\n $ count   : int 1328\n $ next    : chr \"https://pokeapi.co/api/v2/pokemon?offset=20&limit=20\"\n $ previous: NULL\n $ results :List of 20\n  ..$ :List of 2\n  .. ..$ name: chr \"bulbasaur\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/pokemon/1/\"\n  ..$ :List of 2\n  .. ..$ name: chr \"ivysaur\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/pokemon/2/\"\n  ..$ :List of 2\n  .. ..$ name: chr \"venusaur\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/pokemon/3/\"\n  ..$ :List of 2\n....\n\n\n\n\nRequest a specific pokemon endpoint\n\nDefine an endpoint for bulbasaur\nPerform the request\nDisplay the response\n\n\nresponse &lt;- request(base_url) |&gt;\n    req_url_path_append(endpoint, 'bulbasaur') |&gt; \n    req_perform() |&gt; \n    resp_body_json()\n\nresponse |&gt; glimpse()\n\nList of 20\n $ abilities               :List of 2\n  ..$ :List of 3\n  .. ..$ ability  :List of 2\n  .. ..$ is_hidden: logi FALSE\n  .. ..$ slot     : int 1\n  ..$ :List of 3\n  .. ..$ ability  :List of 2\n  .. ..$ is_hidden: logi TRUE\n  .. ..$ slot     : int 3\n $ base_experience         : int 64\n $ cries                   :List of 2\n  ..$ latest: chr \"https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/1.ogg\"\n  ..$ legacy: chr \"https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/1.ogg\"\n $ forms                   :List of 1\n...."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#manipulating-json-data",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#manipulating-json-data",
+    "title": "Introduction to APIs in R",
+    "section": "Manipulating JSON data",
+    "text": "Manipulating JSON data\n\nExtract data from a JSON into a tibble (dataframe)\nJSON data is variably nested and can be difficult to work with. For example, what if we want to retrieve the stats for bulbasaur and format it like:\n\n\n\nStat Name\nStat\n\n\n\n\nHP\n30\n\n\nAttack\n25\n\n\nDefense\n35\n\n\n\nWe can see that stats are nested in a hierarchy of lists, and are difficult to retreive by name:\n\nstr(response$stats)\n\nList of 6\n $ :List of 3\n  ..$ base_stat: int 45\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"hp\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/1/\"\n $ :List of 3\n  ..$ base_stat: int 49\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"attack\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/2/\"\n $ :List of 3\n  ..$ base_stat: int 49\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"defense\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/3/\"\n $ :List of 3\n  ..$ base_stat: int 65\n  ..$ effort   : int 1\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"special-attack\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/4/\"\n $ :List of 3\n  ..$ base_stat: int 65\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"special-defense\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/5/\"\n $ :List of 3\n  ..$ base_stat: int 45\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"speed\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/6/\"\n\n\nOne strategy is to iterate over all six outer lists, each of which corresponds to a single statistics, and then extract the relevant information from the inner lists.\nWe can do this using the map_df() function from the purrr library. The map_df() iterates, or “maps”, over each list, allows us to perform a function, and returns the result as a dataframe.\nThe function takes the form map_df(my_list, ~ function(.x)) where the ~ represents an anonymous function that allows us to reference each list as .x.\nWe can extract all of the stats into a dataframe using:\n\nstats &lt;- map_df(\n  response$stats,\n  ~ tibble(stat_name = .x$stat$name, stat = .x$base_stat)\n)\n\nwhich gives us:\n\nstats\n\n# A tibble: 6 × 2\n  stat_name        stat\n  &lt;chr&gt;           &lt;int&gt;\n1 hp                 45\n2 attack             49\n3 defense            49\n4 special-attack     65\n5 special-defense    65\n6 speed              45\n\n\nThe rest of the data is easier to extract from response, so by using both our stats tibble we created, as well as the original response, we can create a tibble of bulbasaur stats:\n\nbulbasaur_stats &lt;- tibble(\n  sprite = response$sprites$front_default,\n  species = response$species$name,\n  height = response$height,\n  weight = response$weight,\n  hp = stats$stat[stats$stat_name == \"hp\"],\n  defense = stats$stat[stats$stat_name == \"defense\"],\n  attack = stats$stat[stats$stat_name == \"attack\"])\n\nbulbasaur_stats\n\n# A tibble: 1 × 7\n  sprite                              species height weight    hp defense attack\n  &lt;chr&gt;                               &lt;chr&gt;    &lt;int&gt;  &lt;int&gt; &lt;int&gt;   &lt;int&gt;  &lt;int&gt;\n1 https://raw.githubusercontent.com/… bulbas…      7     69    45      49     49"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#pagination",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#pagination",
+    "title": "Introduction to APIs in R",
+    "section": "Pagination",
+    "text": "Pagination\n\nUsing pagination to request data for 100 pokemon\nWhat if we want stats for more than one pokemon? We need to find some way of making multiple requests for each pokemon.\nLet’s create a request for 20 pokemon. We can use req_url_query() to pass specific parameters to our get request; in this case we will pass limit=20 to request 20 records:\n\nrequest &lt;- request(base_url) |&gt; \n    req_url_path_append('pokemon') |&gt; \n    req_url_query(limit = 20)\n\nIf we perform a single request, and examine it, we see an interesting attribute - next:\n\nresponse &lt;- req_perform(request) |&gt; resp_body_json()\nresponse$`next`\n\n[1] \"https://pokeapi.co/api/v2/pokemon?offset=20&limit=20\"\n\n\nNext is delivered as part of our JSON. It tells us, if we wanted the next batch of records, exactly what API call we would need to make. We can think of these as a chain of API calls that allow us to iterate through all records available to us:\n...okemon?offset=20&limit=20\" -&gt; ...okemon?offset=40&limit=20\" -&gt; ...okemon?offset=60&limit=20\" …\nand so on until we end up reaching the end, which we know is the end because next == NULL - there are no more records past the last API call.\nSo how do we request multiple pokemon stats? There are different strategies, which you will find is often the case when working with APIs. We will:\n\nUse the req_perform_iterative() function to iterate over multiple batches of records until we have all 1,328 pokemon. Learn more about req_perform_iterative.\nCreate our own function, req_paged_next() which will help us update each step of req_perform_iterative() to use the next record available.\nIterate over all of the responses, and extract the name and url endpoint for each pokemon.\nCreate a function that generalizes the process of extracting pokemon statistics from a JSON, as we did with bulbasaur.\nUsing the list of pokemon URLs, make 1,328 API requests, one for each pokemon, and extract the statistics for each pokemon.\n\nWe can extract all the pokemon using:\n\nresponses &lt;- req_perform_iterative(\n    request,\n    next_req = SOME_HELPER_FUNCTION,\n    on_error = \"return\" # If request fails, stop and return what you have\n)\n\nnext_req take’s a function, with the arguments (resp, req).\nNormally we could use one of the httr2 provided iteration helper functions to help us iterate over.\n\n\n\n\n\n\nNote\n\n\n\nThese functions are intended for use with the next_req argument to req_perform_iterative().\nEach implements iteration for a common pagination pattern:\n\n\n\niterate_with_offset() — increments a query parameter, e.g. ?page=1, ?page=2, or ?offset=1, offset=21.\niterate_with_cursor() — updates a query parameter with the value of a cursor found somewhere in the response.\niterate_with_link_url() — follows the URL found in the Link header. See resp_link_url() for more details.\n\nThe problem is, our next url is not included in the Link header, as is common, but is instead part of our JSON. This means we will need to write and provide a custom function to provide it to req_perform_iterative.\n\n\nLet’s build a next page handler\nOur next page handler takes two arguments, resp and req. These stand for response and request, respectively. We must use these abbreviations, because that is what the req_perform_iterative next_req argument expects.\nOur next page handler does the following:\n\nExtracts the JSON body: resp_body_json(resp)\nGrabs the next url response_body$next``\nChecks if the next URL is NULL, and returns NULL if so. if (is.null(next_url)){return(NULL)}\nOtherwise updates the request with the new URL: req |&gt; req_url(next_url)\n\n\nnext_page_handler &lt;- function(resp, req) {\n  response_body &lt;- resp_body_json(resp)\n  next_url &lt;- response_body$`next`\n  ## Error handling - if we get to a next that returns NULL\n  ## then we stop. Otherwise keep navigating through our \n  ## chain of next URLs.\n  if (is.null(next_url)) {\n    return(NULL)\n  } else {\n    req |&gt; req_url(next_url)\n  }\n}\n\nWe can avoid hitting any API limits by using req_throttle() in request() to ensure we never exceed a specified rate.\nThrottling is implemented using a “token bucket”, which fills up to a maximum of capacity tokens over fill_time_s (fill time in seconds). Each time you make a request, it takes a token out of the bucket, and if the bucket is empty, the request will wait until the bucket refills. This ensures that you never make more than capacity requests in fill_time_s.\n\nrequest &lt;- request(\"https://pokeapi.co/api/v2/pokemon\") |&gt; \n  req_url_query(limit = 20) |&gt; \n  req_throttle(capacity = 10, fill_time_s = 60)\n\nNow let’s get all the first 100 pokemon (by setting max_reqs = 5). We can get all the pokemon by setting max_reqs = Inf, but be cautious of API limits.\n\nresponses &lt;- httr2::req_perform_iterative(\n  request,\n  next_req = next_page_handler,\n  max_reqs = 5,\n  on_error = \"return\"\n)\n\nNow we can use map_dfr() to iterate over each response and extract the results.\n\npokemon_names &lt;-\n  purrr::map_dfr(responses, function(response) {\n    body &lt;- httr2::resp_body_json(response)\n    purrr::map_dfr(body$results, tibble::as_tibble)\n  })\n\npokemon_names\n\n# A tibble: 100 × 2\n   name       url                                  \n   &lt;chr&gt;      &lt;chr&gt;                                \n 1 bulbasaur  https://pokeapi.co/api/v2/pokemon/1/ \n 2 ivysaur    https://pokeapi.co/api/v2/pokemon/2/ \n 3 venusaur   https://pokeapi.co/api/v2/pokemon/3/ \n 4 charmander https://pokeapi.co/api/v2/pokemon/4/ \n 5 charmeleon https://pokeapi.co/api/v2/pokemon/5/ \n 6 charizard  https://pokeapi.co/api/v2/pokemon/6/ \n 7 squirtle   https://pokeapi.co/api/v2/pokemon/7/ \n 8 wartortle  https://pokeapi.co/api/v2/pokemon/8/ \n 9 blastoise  https://pokeapi.co/api/v2/pokemon/9/ \n10 caterpie   https://pokeapi.co/api/v2/pokemon/10/\n# ℹ 90 more rows\n\n\n\n\nRetrieve statistics for each pokemon through multiple API calls\nIn order to retrieve statsitics for each pokemon, we can iterate over each URL in pokemon_names and make a request for the specific pokemon endpoint represented by that url. To do this, we can build on our approach for extracting statistics from one pokemon, and build a function for multiple.\n\nget_pokemon_details &lt;- function(url) {\n\n  response &lt;- request(url) |&gt; req_perform() |&gt; resp_body_json()\n\n  ## We don't have ways to limit the number of requests over\n  ## a given time period, so we can use Sys.sleep to pause our\n  ## function before each request to ensure we don't exceed \n  ## API limits.\n  Sys.sleep(.5)\n  \n\n  stats &lt;- purrr:::map_df(\n    response$stats,\n    ~ tibble(stat_name = .x$stat$name, stat = .x$base_stat)\n  )\n\n  tibble(\n    sprite = response$sprites$front_default,\n    name = response$name,\n    height = response$height,\n    weight = response$weight,\n    hp = stats$stat[stats$stat_name == \"hp\"],\n    defense = stats$stat[stats$stat_name == \"defense\"],\n    attack = stats$stat[stats$stat_name == \"attack\"]\n  ) |&gt;\n    ## This mutate function wraps each sprite url in \n    ## &lt;img src=\"SPRITE_URL\"height=\"50\"&gt;&lt;/img&gt; so it can\n    ## be displayed in an HTML table using the DT library\n    mutate(sprite = paste0('&lt;img src=\"', sprite, '\" height=\"50\"&gt;&lt;/img&gt;'))\n}\n\nNow iterate over each pokemon URL and excecute the get_pokemon_details function to retrieve each pokemon’s statistics:\n\npokemon_stats &lt;- map_dfr(pokemon_names$url, get_pokemon_details)\n\nFinally, display our resultant table:\n\ndatatable(data = pokemon_stats, escape = FALSE)"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#api-key-privacy",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R-Completed-Code.html#api-key-privacy",
+    "title": "Introduction to APIs in R",
+    "section": "API key privacy",
+    "text": "API key privacy\nWhat if you are working with an API that requires an API key?\nFor example, let’s use the NASA API to retreive weather data on mars:\nThis API is a little different. We have to specify our data type (JSON) and our API version (1.0) as parameters in our GET request:\n\nnasa_base_url &lt;- 'https://api.nasa.gov/'\n\nreq &lt;- request(nasa_base_url) |&gt;\n  req_url_path_append('insight_weather/') |&gt;\n  req_url_query(feedtype = \"json\", ver = \"1.0\") |&gt;\n  req_perform()\n\nError in `req_perform()`:\n! HTTP 403 Forbidden.\n\nreq\n\nError: object 'req' not found\n\n\nWe see that when we run it, we get a 403 HTTP error. We are not considered a valid user unless we provide an API key.\nYou can register for an API key with nothing but an email at https://api.nasa.gov/, or we can use the demo key that NASA provides for experimenting with their API (although it does have lower API limits than if you use your own key).\n\napi_key &lt;- 'DEMO_KEY'\n\nreq &lt;- request(nasa_base_url) |&gt;\n  req_url_path_append('insight_weather/') |&gt;\n  req_url_query(feedtype = \"json\", ver = \"1.0\", api_key = api_key) |&gt;\n  req_perform()\n  \nreq\n\n&lt;httr2_response&gt;\nGET https://api.nasa.gov/insight_weather/?feedtype=json&ver=1.0&api_key=DEMO_KEY\nStatus: 200 OK\nContent-Type: application/json\nBody: In memory (36505 bytes)\n\n\nNow that we passed the api_key as a parameter, we received a valid response (HTTP 200).\nWe don’t want to store that API key in plaintext though - anyone could steal it! Let’s store it as an environmental variable. To do that, you can add it to your .Renviron file in your home directory.\nYou can use an R package to edit that file directly in RStudio: usethis.\nusethis is a workflow package: it automates repetitive tasks that arise during project setup and development, both for R packages and non-package projects.\n\nlibrary(usethis)\nedit_r_environ()\n\n☐ Edit '/Users/plawson/.Renviron'.\n\n\n☐ Restart R for changes to take effect.\n\n\nAn editor window will open, and you can add the following (replacing \"DEMO_KEY\" with your own API key, if you registered for one)\nAPI_KEY = \"DEMO_KEY\"\nNow you can load your API key from your .Renviron file by first restarting R, and then:\n\napi_key &lt;- Sys.getenv(\"API_KEY\")\nnasa_base_url &lt;- 'https://api.nasa.gov/'\n\nreq &lt;- request(nasa_base_url) |&gt;\n  req_url_path_append('insight_weather/') |&gt;\n  req_url_query(feedtype = \"json\", ver = \"1.0\", api_key = api_key) |&gt;\n  req_perform()\n  \nreq\n\n&lt;httr2_response&gt;\nGET https://api.nasa.gov/insight_weather/?feedtype=json&ver=1.0&api_key=DEMO_KEY\nStatus: 200 OK\nContent-Type: application/json\nBody: In memory (36505 bytes)"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Tutorial.html",
+    "href": "Introduction-to-APIs-in-R-Tutorial.html",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "This document has the completed code for the Johns Hopkins Data Services October 22nd session Introduction to APIs in R.\n\n\n\n## Library for working with RESTful APIs \nlibrary(httr2)\n\n## Libraries for data processing\nlibrary(purrr)\nlibrary(dplyr)\nlibrary(tibble)\n\n## Library for viewing dataframe as HTML table\nlibrary(DT)"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Tutorial.html#introduction",
+    "href": "Introduction-to-APIs-in-R-Tutorial.html#introduction",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "This document has the completed code for the Johns Hopkins Data Services October 22nd session Introduction to APIs in R.\n\n\n\n## Library for working with RESTful APIs \nlibrary(httr2)\n\n## Libraries for data processing\nlibrary(purrr)\nlibrary(dplyr)\nlibrary(tibble)\n\n## Library for viewing dataframe as HTML table\nlibrary(DT)"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Tutorial.html#introduction-to-requests",
+    "href": "Introduction-to-APIs-in-R-Tutorial.html#introduction-to-requests",
+    "title": "Introduction to APIs in R",
+    "section": "Introduction to Requests",
+    "text": "Introduction to Requests\nUse the PokeAPI to extract basic information about Pokémon using a series of API requests.\n\nSet the url for the API and set our endpoint (pokemon)\n\nbase_url &lt;- 'https://pokeapi.co/api/v2/'\nendpoint &lt;- 'pokemon'\n\n\n\nUse req_url_path_append() to construct the endpoint path\n\nrequest &lt;- request(base_url) |&gt; \n    req_url_path_append(endpoint)\n\nWe can see the get request formed by our request function:\n\nrequest\n\n&lt;httr2_request&gt;\nGET https://pokeapi.co/api/v2/pokemon\nBody: empty\n\n\n\n\nGenerate a response by performing our request using req_perform(request)\n\nresponse &lt;- req_perform(request)\n\nLet’s take a look at the contents of our raw response body:\n\nresponse$body\n\n   [1] 7b 22 63 6f 75 6e 74 22 3a 31 33 32 38 2c 22 6e 65 78 74 22 3a 22 68 74\n  [25] 74 70 73 3a 2f 2f 70 6f 6b 65 61 70 69 2e 63 6f 2f 61 70 69 2f 76 32 2f\n  [49] 70 6f 6b 65 6d 6f 6e 3f 6f 66 66 73 65 74 3d 32 30 26 6c 69 6d 69 74 3d\n  [73] 32 30 22 2c 22 70 72 65 76 69 6f 75 73 22 3a 6e 75 6c 6c 2c 22 72 65 73\n  [97] 75 6c 74 73 22 3a 5b 7b 22 6e 61 6d 65 22 3a 22 62 75 6c 62 61 73 61 75\n [121] 72 22 2c 22 75 72 6c 22 3a 22 68 74 74 70 73 3a 2f 2f 70 6f 6b 65 61 70\n [145] 69 2e 63 6f 2f 61 70 69 2f 76 32 2f 70 6f 6b 65 6d 6f 6e 2f 31 2f 22 7d\n [169] 2c 7b 22 6e 61 6d 65 22 3a 22 69 76 79 73 61 75 72 22 2c 22 75 72 6c 22\n [193] 3a 22 68 74 74 70 73 3a 2f 2f 70 6f 6b 65 61 70 69 2e 63 6f 2f 61 70 69\n [217] 2f 76 32 2f 70 6f 6b 65 6d 6f 6e 2f 32 2f 22 7d 2c 7b 22 6e 61 6d 65 22\n....\n\n\nWe see that our output is raw byte codes - as series of two character hexadecimal values. This is because we need to tell the httr2 library to intepret the body as a JSON. We can use glimpse() to make our JSON output more readable.\n\nresponse |&gt; \n    resp_body_json() |&gt; \n    glimpse()\n\nList of 4\n $ count   : int 1328\n $ next    : chr \"https://pokeapi.co/api/v2/pokemon?offset=20&limit=20\"\n $ previous: NULL\n $ results :List of 20\n  ..$ :List of 2\n  .. ..$ name: chr \"bulbasaur\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/pokemon/1/\"\n  ..$ :List of 2\n  .. ..$ name: chr \"ivysaur\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/pokemon/2/\"\n  ..$ :List of 2\n  .. ..$ name: chr \"venusaur\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/pokemon/3/\"\n  ..$ :List of 2\n....\n\n\n\n\nRequest a specific pokemon endpoint\n\nDefine an endpoint for bulbasaur\nPerform the request\nDisplay the response\n\n\nresponse &lt;- request(base_url) |&gt;\n    req_url_path_append(endpoint, 'bulbasaur') |&gt; \n    req_perform() |&gt; \n    resp_body_json()\n\nresponse |&gt; glimpse()\n\nList of 20\n $ abilities               :List of 2\n  ..$ :List of 3\n  .. ..$ ability  :List of 2\n  .. ..$ is_hidden: logi FALSE\n  .. ..$ slot     : int 1\n  ..$ :List of 3\n  .. ..$ ability  :List of 2\n  .. ..$ is_hidden: logi TRUE\n  .. ..$ slot     : int 3\n $ base_experience         : int 64\n $ cries                   :List of 2\n  ..$ latest: chr \"https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/1.ogg\"\n  ..$ legacy: chr \"https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/1.ogg\"\n $ forms                   :List of 1\n...."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Tutorial.html#manipulating-json-data",
+    "href": "Introduction-to-APIs-in-R-Tutorial.html#manipulating-json-data",
+    "title": "Introduction to APIs in R",
+    "section": "Manipulating JSON data",
+    "text": "Manipulating JSON data\n\nExtract data from a JSON into a tibble (dataframe)\nJSON data is variably nested and can be difficult to work with. For example, what if we want to retrieve the stats for bulbasaur and format it like:\n\n\n\nStat Name\nStat\n\n\n\n\nHP\n30\n\n\nAttack\n25\n\n\nDefense\n35\n\n\n\nWe can see that stats are nested in a hierarchy of lists, and are difficult to retreive by name:\n\nstr(response$stats)\n\nList of 6\n $ :List of 3\n  ..$ base_stat: int 45\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"hp\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/1/\"\n $ :List of 3\n  ..$ base_stat: int 49\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"attack\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/2/\"\n $ :List of 3\n  ..$ base_stat: int 49\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"defense\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/3/\"\n $ :List of 3\n  ..$ base_stat: int 65\n  ..$ effort   : int 1\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"special-attack\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/4/\"\n $ :List of 3\n  ..$ base_stat: int 65\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"special-defense\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/5/\"\n $ :List of 3\n  ..$ base_stat: int 45\n  ..$ effort   : int 0\n  ..$ stat     :List of 2\n  .. ..$ name: chr \"speed\"\n  .. ..$ url : chr \"https://pokeapi.co/api/v2/stat/6/\"\n\n\nOne strategy is to iterate over all six outer lists, each of which corresponds to a single statistics, and then extract the relevant information from the inner lists.\nWe can do this using the map_df() function from the purrr library. The map_df() iterates, or “maps”, over each list, allows us to perform a function, and returns the result as a dataframe.\nThe function takes the form map_df(my_list, ~ function(.x)) where the ~ represents an anonymous function that allows us to reference each list as .x.\nWe can extract all of the stats into a dataframe using:\n\nstats &lt;- map_df(\n  response$stats,\n  ~ tibble(stat_name = .x$stat$name, stat = .x$base_stat)\n)\n\nwhich gives us:\n\nstats\n\n# A tibble: 6 × 2\n  stat_name        stat\n  &lt;chr&gt;           &lt;int&gt;\n1 hp                 45\n2 attack             49\n3 defense            49\n4 special-attack     65\n5 special-defense    65\n6 speed              45\n\n\nThe rest of the data is easier to extract from response, so by using both our stats tibble we created, as well as the original response, we can create a tibble of bulbasaur stats:\n\nbulbasaur_stats &lt;- tibble(\n  sprite = response$sprites$front_default,\n  species = response$species$name,\n  height = response$height,\n  weight = response$weight,\n  hp = stats$stat[stats$stat_name == \"hp\"],\n  defense = stats$stat[stats$stat_name == \"defense\"],\n  attack = stats$stat[stats$stat_name == \"attack\"])\n\nbulbasaur_stats\n\n# A tibble: 1 × 7\n  sprite                              species height weight    hp defense attack\n  &lt;chr&gt;                               &lt;chr&gt;    &lt;int&gt;  &lt;int&gt; &lt;int&gt;   &lt;int&gt;  &lt;int&gt;\n1 https://raw.githubusercontent.com/… bulbas…      7     69    45      49     49"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Tutorial.html#pagination",
+    "href": "Introduction-to-APIs-in-R-Tutorial.html#pagination",
+    "title": "Introduction to APIs in R",
+    "section": "Pagination",
+    "text": "Pagination\n\nUsing pagination to request data for 100 pokemon\nWhat if we want stats for more than one pokemon? We need to find some way of making multiple requests for each pokemon.\nLet’s create a request for 20 pokemon. We can use req_url_query() to pass specific parameters to our get request; in this case we will pass limit=20 to request 20 records:\n\nrequest &lt;- request(base_url) |&gt; \n    req_url_path_append('pokemon') |&gt; \n    req_url_query(limit = 20)\n\nIf we perform a single request, and examine it, we see an interesting attribute - next:\n\nresponse &lt;- req_perform(request) |&gt; resp_body_json()\nresponse$`next`\n\n[1] \"https://pokeapi.co/api/v2/pokemon?offset=20&limit=20\"\n\n\nNext is delivered as part of our JSON. It tells us, if we wanted the next batch of records, exactly what API call we would need to make. We can think of these as a chain of API calls that allow us to iterate through all records available to us:\n...okemon?offset=20&limit=20\" -&gt; ...okemon?offset=40&limit=20\" -&gt; ...okemon?offset=60&limit=20\" …\nand so on until we end up reaching the end, which we know is the end because next == NULL - there are no more records past the last API call.\nSo how do we request multiple pokemon stats? There are different strategies, which you will find is often the case when working with APIs. We will:\n\nUse the req_perform_iterative() function to iterate over multiple batches of records until we have all 1,328 pokemon. Learn more about req_perform_iterative.\nCreate our own function, req_paged_next() which will help us update each step of req_perform_iterative() to use the next record available.\nIterate over all of the responses, and extract the name and url endpoint for each pokemon.\nCreate a function that generalizes the process of extracting pokemon statistics from a JSON, as we did with bulbasaur.\nUsing the list of pokemon URLs, make 1,328 API requests, one for each pokemon, and extract the statistics for each pokemon.\n\nWe can extract all the pokemon using:\n\nresponses &lt;- req_perform_iterative(\n    request,\n    next_req = SOME_HELPER_FUNCTION,\n    on_error = \"return\" # If request fails, stop and return what you have\n)\n\nnext_req take’s a function, with the arguments (resp, req).\nNormally we could use one of the httr2 provided iteration helper functions to help us iterate over.\n\n\n\n\n\n\nNote\n\n\n\nThese functions are intended for use with the next_req argument to req_perform_iterative().\nEach implements iteration for a common pagination pattern:\n\n\n\niterate_with_offset() — increments a query parameter, e.g. ?page=1, ?page=2, or ?offset=1, offset=21.\niterate_with_cursor() — updates a query parameter with the value of a cursor found somewhere in the response.\niterate_with_link_url() — follows the URL found in the Link header. See resp_link_url() for more details.\n\nThe problem is, our next url is not included in the Link header, as is common, but is instead part of our JSON. This means we will need to write and provide a custom function to provide it to req_perform_iterative.\n\n\nLet’s build a next page handler\nOur next page handler takes two arguments, resp and req. These stand for response and request, respectively. We must use these abbreviations, because that is what the req_perform_iterative next_req argument expects.\nOur next page handler does the following:\n\nExtracts the JSON body: resp_body_json(resp)\nGrabs the next url response_body$next``\nChecks if the next URL is NULL, and returns NULL if so. if (is.null(next_url)){return(NULL)}\nOtherwise updates the request with the new URL: req |&gt; req_url(next_url)\n\n\nnext_page_handler &lt;- function(resp, req) {\n  response_body &lt;- resp_body_json(resp)\n  next_url &lt;- response_body$`next`\n  ## Error handling - if we get to a next that returns NULL\n  ## then we stop. Otherwise keep navigating through our \n  ## chain of next URLs.\n  if (is.null(next_url)) {\n    return(NULL)\n  } else {\n    req |&gt; req_url(next_url)\n  }\n}\n\nWe can avoid hitting any API limits by using req_throttle() in request() to ensure we never exceed a specified rate.\nThrottling is implemented using a “token bucket”, which fills up to a maximum of capacity tokens over fill_time_s (fill time in seconds). Each time you make a request, it takes a token out of the bucket, and if the bucket is empty, the request will wait until the bucket refills. This ensures that you never make more than capacity requests in fill_time_s.\n\nrequest &lt;- request(\"https://pokeapi.co/api/v2/pokemon\") |&gt; \n  req_url_query(limit = 20) |&gt; \n  req_throttle(capacity = 10, fill_time_s = 60)\n\nNow let’s get all the first 100 pokemon (by setting max_reqs = 5). We can get all the pokemon by setting max_reqs = Inf, but be cautious of API limits.\n\nresponses &lt;- httr2::req_perform_iterative(\n  request,\n  next_req = next_page_handler,\n  max_reqs = 5,\n  on_error = \"return\"\n)\n\nNow we can use map_dfr() to iterate over each response and extract the results.\n\npokemon_names &lt;-\n  purrr::map_dfr(responses, function(response) {\n    body &lt;- httr2::resp_body_json(response)\n    purrr::map_dfr(body$results, tibble::as_tibble)\n  })\n\npokemon_names\n\n# A tibble: 100 × 2\n   name       url                                  \n   &lt;chr&gt;      &lt;chr&gt;                                \n 1 bulbasaur  https://pokeapi.co/api/v2/pokemon/1/ \n 2 ivysaur    https://pokeapi.co/api/v2/pokemon/2/ \n 3 venusaur   https://pokeapi.co/api/v2/pokemon/3/ \n 4 charmander https://pokeapi.co/api/v2/pokemon/4/ \n 5 charmeleon https://pokeapi.co/api/v2/pokemon/5/ \n 6 charizard  https://pokeapi.co/api/v2/pokemon/6/ \n 7 squirtle   https://pokeapi.co/api/v2/pokemon/7/ \n 8 wartortle  https://pokeapi.co/api/v2/pokemon/8/ \n 9 blastoise  https://pokeapi.co/api/v2/pokemon/9/ \n10 caterpie   https://pokeapi.co/api/v2/pokemon/10/\n# ℹ 90 more rows\n\n\n\n\nRetreive statistics for each pokemon through multiple API calls\nIn order to retrieve statsitics for each pokemon, we can iterate over each URL in pokemon_names and make a request for the specific pokemon endpoint represented by that url. To do this, we can build on our approach for extracting statistics from one pokemon, and build a function for multiple.\n\nget_pokemon_details &lt;- function(url) {\n\n  response &lt;- request(url) |&gt; req_perform() |&gt; resp_body_json()\n\n  ## We don't have ways to limit the number of requests over\n  ## a given time period, so we can use Sys.sleep to pause our\n  ## function before each request to ensure we don't exceed \n  ## API limits.\n  Sys.sleep(.5)\n  \n\n  stats &lt;- purrr:::map_df(\n    response$stats,\n    ~ tibble(stat_name = .x$stat$name, stat = .x$base_stat)\n  )\n\n  tibble(\n    sprite = response$sprites$front_default,\n    name = response$name,\n    height = response$height,\n    weight = response$weight,\n    hp = stats$stat[stats$stat_name == \"hp\"],\n    defense = stats$stat[stats$stat_name == \"defense\"],\n    attack = stats$stat[stats$stat_name == \"attack\"]\n  ) |&gt;\n    ## This mutate function wraps each sprite url in \n    ## &lt;img src=\"SPRITE_URL\"height=\"50\"&gt;&lt;/img&gt; so it can\n    ## be displayed in an HTML table using the DT library\n    mutate(sprite = paste0('&lt;img src=\"', sprite, '\" height=\"50\"&gt;&lt;/img&gt;'))\n}\n\nNow iterate over each pokemon URL and excecute the get_pokemon_details function to retrieve each pokemon’s statistics:\n\npokemon_stats &lt;- map_dfr(pokemon_names$url, get_pokemon_details)\n\nFinally, display our resultant table:\n\ndatatable(data = pokemon_stats, escape = FALSE)"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Tutorial.html#api-key-privacy",
+    "href": "Introduction-to-APIs-in-R-Tutorial.html#api-key-privacy",
+    "title": "Introduction to APIs in R",
+    "section": "API key privacy",
+    "text": "API key privacy\nWhat if you are working with an API that requires an API key?\nFor example, let’s use the NASA API to retreive weather data on mars:\nThis API is a little different. We have to specify our data type (JSON) and our API version (1.0) as parameters in our GET request:\n\nnasa_base_url &lt;- 'https://api.nasa.gov/'\n\nreq &lt;- request(nasa_base_url) |&gt;\n  req_url_path_append('insight_weather/') |&gt;\n  req_url_query(feedtype = \"json\", ver = \"1.0\") |&gt;\n  req_perform()\n\nError in `req_perform()`:\n! HTTP 403 Forbidden.\n\nreq\n\nError: object 'req' not found\n\n\nWe see that when we run it, we get a 403 HTTP error. We are not considered a valid user unless we provide an API key.\nYou can register for an API key with nothing but an email at https://api.nasa.gov/, or we can use the demo key that NASA provides for experimenting with their API (although it does have lower API limits than if you use your own key).\n\napi_key &lt;- 'DEMO_KEY'\n\nreq &lt;- request(nasa_base_url) |&gt;\n  req_url_path_append('insight_weather/') |&gt;\n  req_url_query(feedtype = \"json\", ver = \"1.0\", api_key = api_key) |&gt;\n  req_perform()\n  \nreq\n\n&lt;httr2_response&gt;\nGET https://api.nasa.gov/insight_weather/?feedtype=json&ver=1.0&api_key=DEMO_KEY\nStatus: 200 OK\nContent-Type: application/json\nBody: In memory (36505 bytes)\n\n\nNow that we passed the api_key as a parameter, we received a valid response (HTTP 200).\nWe don’t want to store that API key in plaintext though - anyone could steal it! Let’s store it as an environmental variable. To do that, you can add it to your .Renviron file in your home directory.\nYou can use an R package to edit that file directly in RStudio: usethis.\nusethis is a workflow package: it automates repetitive tasks that arise during project setup and development, both for R packages and non-package projects.\n\nlibrary(usethis)\nedit_r_environ()\n\n☐ Edit '/Users/plawson/.Renviron'.\n\n\n☐ Restart R for changes to take effect.\n\n\nAn editor window will open, and you can add the following (replacing \"DEMO_KEY\" with your own API key, if you registered for one)\nAPI_KEY = \"DEMO_KEY\"\nNow you can load your API key from your .Renviron file by first restarting R, and then:\n\napi_key &lt;- Sys.getenv(\"API_KEY\")\nnasa_base_url &lt;- 'https://api.nasa.gov/'\n\nreq &lt;- request(nasa_base_url) |&gt;\n  req_url_path_append('insight_weather/') |&gt;\n  req_url_query(feedtype = \"json\", ver = \"1.0\", api_key = api_key) |&gt;\n  req_perform()\n  \nreq\n\n&lt;httr2_response&gt;\nGET https://api.nasa.gov/insight_weather/?feedtype=json&ver=1.0&api_key=DEMO_KEY\nStatus: 200 OK\nContent-Type: application/json\nBody: In memory (36505 bytes)"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#learning-objectives",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#learning-objectives",
+    "title": "Introduction to APIs in R",
+    "section": "Learning Objectives",
+    "text": "Learning Objectives\nBy the end of this workshop, you should be able to:\n\nExplain what an API is.\nBe able to use API documentation to explore available API endpoints.\nFetch data from an API using the httr2 library.\nUnderstand pagination and be able to apply strategies to work with API limits.\nUse, and secure, an API key."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#todays-session",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#todays-session",
+    "title": "Introduction to APIs in R",
+    "section": "Today’s Session",
+    "text": "Today’s Session\nThis session is a mixture of live-coding and lecture.\n\nPlease mute your microphone 🎙️.\nPlease use the chat 💬 feature to ask questions during the session.\nWe will have breaks every 50 minutes ☕.\nWe will update codeshare.io/apis-in-r during the live coding portion.\nAt the end of today’s session, please complete a short survey: bit.ly/apis-in-r-survey"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#ways-of-accessing-data",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#ways-of-accessing-data",
+    "title": "Introduction to APIs in R",
+    "section": "Ways of accessing data",
+    "text": "Ways of accessing data\n\n\n\nManual\n\nDownload files from the web (CSV, Excel, Text, Parquet, etc.)\nCopy manually from websites (tables, charts, text)\nExtract data from documents (Word or PDFs)\n\n\nAutomatic\n\nDatabases\nAPIs\nWeb Scraping (Extract information from web pages programmatically)\nSensors"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#why-use-an-api",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#why-use-an-api",
+    "title": "Introduction to APIs in R",
+    "section": "Why use an API?",
+    "text": "Why use an API?\n\nYou need the most up-to-date information.\nYou don’t need everything - you can ask for exactly what you want.\nIt’s repeatable - you can write code once, and reuse everytime you need new data."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#what-is-an-api",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#what-is-an-api",
+    "title": "Introduction to APIs in R",
+    "section": "What is an API?",
+    "text": "What is an API?\n\nAPI stands for:\nApplication Programming Interface\n\n\nAn API provides a way to communicate between your computer (the client) and a remote web service (the server)."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#lets-get-cooking",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#lets-get-cooking",
+    "title": "Introduction to APIs in R",
+    "section": "Lets get cooking 🌶️",
+    "text": "Lets get cooking 🌶️\n\nYou go to a restaurant.\n\n\nRather than waiting to be seated you poke your head into the kitchen, and ask for a grilled cheese sandwich.\n\n\nThe chef promptly throws a spatula at your head. Now you have nothing to show for your effort but a head injury."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#section-1",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#section-1",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "What went wrong?\n\nYou need someone to translate your request in a way the chef understands!\n\n\nYou need an API!"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#section-2",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#section-2",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "Let’s try this again.\n\nYou (the client) enter the restaurant and are seated.\n\n\nA waiter (the API) arrives to take your order. You ask for a grilled cheese, extra cheese, with tomato. The waiter notes your order on a slip of paper (the request), which he posts on the turnstile at the kitchen.\n\n\nThe chef (server) reviews the request’s instructions, prepares a grilled cheese sandwich , and places it on the kitchen window, and hit’s a bell.\n\n\nYour server, hearing the bell, brings you the grilled cheese sandwhich (the response), along with an apology from the chef for the head injury."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#section-3",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#section-3",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "Client: Requests grilled cheese\nAPI: Receives request and delivers to kitchen\nServer: Reviews request and generates response (grilled cheese)\nAPI: delivers response to client"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#types-of-apis",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#types-of-apis",
+    "title": "Introduction to APIs in R",
+    "section": "Types of APIs",
+    "text": "Types of APIs\n\nSOAP (legacy): XML-based, structured, rigid (common in banking/healthcare)\n\n\nREST (modern): Flexible, human-readable, usually returns JSON."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#requests",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#requests",
+    "title": "Introduction to APIs in R",
+    "section": "Requests",
+    "text": "Requests\nWhen you want data from an API, you send a request. This request contains:\n\nThe name of the resource you would like to access (data)\nA verb indicating what you want to do with the data."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#rest-and-http-methods",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#rest-and-http-methods",
+    "title": "Introduction to APIs in R",
+    "section": "REST and HTTP Methods",
+    "text": "REST and HTTP Methods\nCommon verbs in Rest APIs:\n\nGet: Retreive data (most common)\nPost: Create data\nPut: Update data\nDelete: Remove data\n\n\nFor data retrieval, we use GET.\n\n\nExample:\nGET https://pokeapi.co/api/v2/pokemon?limit=3&offset=0"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#api-request-structure",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#api-request-structure",
+    "title": "Introduction to APIs in R",
+    "section": "API Request Structure",
+    "text": "API Request Structure\nA typical API request has four main parts:\n\nHTTP Verb: what we are doing GET\nBase URL: main address https://pokeapi.co/api/v2\nEndpoint: the specific resource we are acting on /pokemon\nQuery Parameters: optional filters\n?limit=3&offset=10\n\n\nFull request:\nGET https://pokeapi.co/api/v2/pokemon?limit=3&offset=10"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#structure-of-an-api-response",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#structure-of-an-api-response",
+    "title": "Introduction to APIs in R",
+    "section": "Structure of an API Response",
+    "text": "Structure of an API Response\nEach API response is composed of two parts:\n\nheader: information about the data (metadata)\n\n\nbody: the data (usually JSON)"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#section-4",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#section-4",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "Think of an API response like an envelope you received in the mail."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#section-5",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#section-5",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "On the outside of the envelope there is information like:\n\nThe address it was addressed to\nThe address where it came from\nThe postage date, which indicates when it was posted\n\n\nThis metadata, or “data about data”, tells you about the letter contained within — who sent it, to whom, and when?.\n\n\nIn an API response this is the API header. It contains information about the data being delivered.\n\n\nThe body of the API contains the actual contents of the letter (the data). These data are most commonly delivered as a JSON."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#what-is-json",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#what-is-json",
+    "title": "Introduction to APIs in R",
+    "section": "What is JSON?",
+    "text": "What is JSON?\nJSON stands for JavaScript Object Notation.\n\nIt’s the most common format for data exchanged through APIs.\n\n\nThink of JSON as a structured way of storing key–value pairs, like a list or dictionary in R or Python."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#json-structure",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#json-structure",
+    "title": "Introduction to APIs in R",
+    "section": "JSON Structure",
+    "text": "JSON Structure\nJSON objects are made of:\n\nKeys (the name of a data field)\nValues (the data associated with that key)\n\n\n{\n  \"name\": \"Pikachu\",\n  \"height\": 4,\n  \"weight\": 60,\n  \"abilities\": [\"static\", \"lightning-rod\"]\n}"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#status-code",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#status-code",
+    "title": "Introduction to APIs in R",
+    "section": "Status Code",
+    "text": "Status Code\nThe status code tells you whether the request succeeded or failed\n\nStatus codes are 3-digit numbers returned by the server:\n\n\n\n\n\n\n\n\n\n\nCode\nMeaning\nDescription\n\n\n\n\n200\n✅ OK\nThe request succeeded and data is returned.\n\n\n201\n🆕 Created\nA new resource was successfully created.\n\n\n400\n⚠️ Bad Request\nThe request was malformed or invalid.\n\n\n401\n🔐 Unauthorized\nMissing or invalid API key.\n\n\n403\n🚫 Forbidden\nYou don’t have permission to access the resource.\n\n\n404\n❓ Not Found\nThe endpoint or item doesn’t exist.\n\n\n429\n🕐 Too Many Requests\nYou’ve hit the API’s rate limit.\n\n\n500\n💥 Server Error\nSomething went wrong on the server side."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#api-endpoints",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#api-endpoints",
+    "title": "Introduction to APIs in R",
+    "section": "API Endpoints",
+    "text": "API Endpoints\nAn API endpoint is a gateway where data is sent and received.\nIn RESTful web APIs, this corresponds to a URL.\n\nhttps://pokeapi.co/api/v2/"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#api-endpoints-1",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#api-endpoints-1",
+    "title": "Introduction to APIs in R",
+    "section": "API Endpoints",
+    "text": "API Endpoints\nAn API endpoint is a gateway where data is sent and received.\nIn RESTful web APIs, this corresponds to a URL.\nhttps://pokeapi.co/api/v2/{endpoint}"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#api-documentation",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#api-documentation",
+    "title": "Introduction to APIs in R",
+    "section": "API Documentation",
+    "text": "API Documentation\nhttps://pokeapi.co/docs/v2#pokemon-section"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#abilities",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#abilities",
+    "title": "Introduction to APIs in R",
+    "section": "Abilities",
+    "text": "Abilities\nAbilities provide passive effects for Pokémon in battle or in the overworld.\n\nGET https://pokeapi.co/api/v2/ability\n\n\n{\n  \"count\": 367,\n  \"next\": \"https://pokeapi.co/api/v2/ability/?offset=20&limit=20\",\n  \"previous\": null,\n  \"results\": [\n    {\n      \"name\": \"stench\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/1/\"\n    },\n    {\n      \"name\": \"drizzle\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/2/\"\n    },\n    {\n      \"name\": \"speed-boost\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/3/\"\n    },\n    {\n      \"name\": \"battle-armor\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/4/\"\n    },\n    {\n      \"name\": \"sturdy\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/5/\"\n    },"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#item",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#item",
+    "title": "Introduction to APIs in R",
+    "section": "Item",
+    "text": "Item\nAn item is an object in the games which the player can pick up, keep in their bag, and use in some manner. They have various uses, including healing, powering up, helping catch Pokémon, or to access a new area.\n\nGET https://pokeapi.co/api/v2/item\n\n\n{\n  \"count\": 2180,\n  \"next\": \"https://pokeapi.co/api/v2/item/?offset=20&limit=20\",\n  \"previous\": null,\n  \"results\": [\n    {\n      \"name\": \"master-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/1/\"\n    },\n    {\n      \"name\": \"ultra-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/2/\"\n    },\n    {\n      \"name\": \"great-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/3/\"\n    },\n    {\n      \"name\": \"poke-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/4/\"\n    },\n    {\n      \"name\": \"safari-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/5/\"\n    },\n    {\n      \"name\": \"net-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/6/\"\n    },\n    {\n      \"name\": \"dive-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/7/\"\n    },\n    {\n      \"name\": \"nest-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/8/\"\n    },\n    {\n      \"name\": \"repeat-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/9/\""
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#pagination",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#pagination",
+    "title": "Introduction to APIs in R",
+    "section": "Pagination 📄",
+    "text": "Pagination 📄\nMany APIs return only part of the dataset at once.\n\nAddditionally, APIs often enact limits on the number of results that can be returned over a given time period.\n\n\nWhich parts of the dataset are returned are controlled by two parameters:\n\n\nlimit: how many records to return\n\n\noffset: how many records to skip\n\n\nTo get all results, you can loop over offsets:\n\n\nhttps://pokeapi.co/api/v2/item/?offset=20&limit=20"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#api-key",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#api-key",
+    "title": "Introduction to APIs in R",
+    "section": "API Key 🔑",
+    "text": "API Key 🔑\n\nMany APIs require something called an API Key\n\n\nAn API key is a unique code used to identify and authenticate a user or application when interacting with an API.\n\n\nAPI keys are generally a string of alphanumeric characters, and look something like this:\n\n\nzaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtlx\n\n\nAPI keys are a security measure to make sure you, or your application, are who you say you are."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#api-key-1",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#api-key-1",
+    "title": "Introduction to APIs in R",
+    "section": "API Key 🔑",
+    "text": "API Key 🔑\nAn API key is like an ID card. You wouldn’t leave your ID card laying around. Anyone could just pick it up and pretend they are you!\n\nIf you store plaintext API keys in code and share it (e.g., on GitHub), anyone with access can read it!\n\n\nlibrary(tidycensus)\nlibrary(tidyverse)\n\ncensus_api_key(\"zaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtl\")\n\n# Retrieve median age by sex (P13_001N) by state\nage_2020 &lt;- get_decennial(geography = \"state\", \n                       variables = \"P13_001N\", \n                       year = 2020,\n                       sumfile = \"dhc\")"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#how-do-we-protect-our-api-keys",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#how-do-we-protect-our-api-keys",
+    "title": "Introduction to APIs in R",
+    "section": "How do we protect our API keys?",
+    "text": "How do we protect our API keys?"
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#environment-variables",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#environment-variables",
+    "title": "Introduction to APIs in R",
+    "section": "Environment Variables",
+    "text": "Environment Variables\nA variable allows us to store information, and an environment is the system we execute our code on.\n\nEnvironment variables allow us to store information specific to a system in variables.\n\n\nEnvironment variables are not stored within our codebase, but are instead stored in a system specific configuration file.\n\n\nWe can use the environment variables configuration file to store our API key, and reference the configuration file in our code in order to load the API key."
+  },
+  {
+    "objectID": "Introduction-to-APIs-in-R-Presentation.html#environment-variables-in-r",
+    "href": "Introduction-to-APIs-in-R-Presentation.html#environment-variables-in-r",
+    "title": "Introduction to APIs in R",
+    "section": "Environment Variables in R",
+    "text": "Environment Variables in R\nIn R, environment variables can be stored in a text file with name-value pairs. Create a file in your home directory by running:\n\nfile.edit(\"~/.Renviron\")\n\n\nUsing the API key listed earlier, we would declare an environment variable in our .Renviron file:\nAPI_KEY = \"zaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtlx\"\n\n\nNow we can update our code to retrieve our API environment variable:\nlibrary(tidycensus)\nlibrary(tidyverse)\n\n# Retrieve API key from .Renviron file\napi_key &lt;- Sys.getenv(\"API_KEY\")\ncensus_api_key(api_key)\n\n# Retrieve median age by sex (P13_001N) by state\nage_2020 &lt;- get_decennial(geography = \"state\", \n                       variables = \"P13_001N\", \n                       year = 2020,\n                       sumfile = \"dhc\")"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#learning-objectives",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#learning-objectives",
+    "title": "Introduction to APIs in R",
+    "section": "Learning Objectives",
+    "text": "Learning Objectives\nBy the end of this workshop, you should be able to:\n\nExplain what an API is.\nBe able to use API documentation to explore available API endpoints.\nFetch data from an API using the httr2 library.\nUnderstand pagination and be able to apply strategies to work with API limits.\nUse, and secure, an API key."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#todays-session",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#todays-session",
+    "title": "Introduction to APIs in R",
+    "section": "Today’s Session",
+    "text": "Today’s Session\nThis session is a mixture of live-coding and lecture.\n\nPlease mute your microphone 🎙️.\nPlease use the chat 💬 feature to ask questions during the session.\nWe will have breaks every 50 minutes ☕.\nWe will update codeshare.io/apis-in-r during the live coding portion.\nAt the end of today’s session, please complete a short survey: bit.ly/apis-in-r-survey"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#ways-of-accessing-data",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#ways-of-accessing-data",
+    "title": "Introduction to APIs in R",
+    "section": "Ways of accessing data",
+    "text": "Ways of accessing data\n\n\n\nManual\n\nDownload files from the web (CSV, Excel, Text, Parquet, etc.)\nCopy manually from websites (tables, charts, text)\nExtract data from documents (Word or PDFs)\n\n\nAutomatic\n\nDatabases\nAPIs\nWeb Scraping (Extract information from web pages programmatically)\nSensors"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#why-use-an-api",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#why-use-an-api",
+    "title": "Introduction to APIs in R",
+    "section": "Why use an API?",
+    "text": "Why use an API?\n\nYou need the most up-to-date information.\nYou don’t need everything - you can ask for exactly what you want.\nIt’s repeatable - you can write code once, and reuse everytime you need new data."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#what-is-an-api",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#what-is-an-api",
+    "title": "Introduction to APIs in R",
+    "section": "What is an API?",
+    "text": "What is an API?\n\nAPI stands for:\nApplication Programming Interface\n\n\nAn API provides a way to communicate between your computer (the client) and a remote web service (the server)."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#lets-get-cooking",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#lets-get-cooking",
+    "title": "Introduction to APIs in R",
+    "section": "Lets get cooking 🌶️",
+    "text": "Lets get cooking 🌶️\n\nYou go to a restaurant.\n\n\nRather than waiting to be seated you poke your head into the kitchen, and ask for a grilled cheese sandwich.\n\n\nThe chef promptly throws a spatula at your head. Now you have nothing to show for your effort but a head injury."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-1",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-1",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "What went wrong?\n\nYou need someone to translate your request in a way the chef understands!\n\n\nYou need an API!"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-2",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-2",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "Let’s try this again.\n\nYou (the client) enter the restaurant and are seated.\n\n\nA waiter (the API) arrives to take your order. You ask for a grilled cheese, extra cheese, with tomato. The waiter notes your order on a slip of paper (the request), which he posts on the turnstile at the kitchen.\n\n\nThe chef (server) reviews the request’s instructions, prepares a grilled cheese sandwich , and places it on the kitchen window, and hit’s a bell.\n\n\nYour server, hearing the bell, brings you the grilled cheese sandwhich (the response), along with an apology from the chef for the head injury."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-3",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-3",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "Client: Requests grilled cheese\nAPI: Receives request and delivers to kitchen\nServer: Reviews request and generates response (grilled cheese)\nAPI: delivers response to client"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#types-of-apis",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#types-of-apis",
+    "title": "Introduction to APIs in R",
+    "section": "Types of APIs",
+    "text": "Types of APIs\n\nSOAP (legacy): XML-based, structured, rigid (common in banking/healthcare)\n\n\nREST (modern): Flexible, human-readable, usually returns JSON."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#requests",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#requests",
+    "title": "Introduction to APIs in R",
+    "section": "Requests",
+    "text": "Requests\nWhen you want data from an API, you send a request. This request contains:\n\nThe name of the resource you would like to access (data)\nA verb indicating what you want to do with the data."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#rest-and-http-methods",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#rest-and-http-methods",
+    "title": "Introduction to APIs in R",
+    "section": "REST and HTTP Methods",
+    "text": "REST and HTTP Methods\nCommon verbs in Rest APIs:\n\nGet: Retreive data (most common)\nPost: Create data\nPut: Update data\nDelete: Remove data\n\n\nFor data retrieval, we use GET.\n\n\nExample:\nGET https://pokeapi.co/api/v2/pokemon?limit=3&offset=0"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-request-structure",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-request-structure",
+    "title": "Introduction to APIs in R",
+    "section": "API Request Structure",
+    "text": "API Request Structure\nA typical API request has four main parts:\n\nHTTP Verb: what we are doing GET\nBase URL: main address https://pokeapi.co/api/v2\nEndpoint: the specific resource we are acting on /pokemon\nQuery Parameters: optional filters\n?limit=3&offset=10\n\n\nFull request:\nGET https://pokeapi.co/api/v2/pokemon?limit=3&offset=10"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#structure-of-an-api-response",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#structure-of-an-api-response",
+    "title": "Introduction to APIs in R",
+    "section": "Structure of an API Response",
+    "text": "Structure of an API Response\nEach API response is composed of two parts:\n\nheader: information about the data (metadata)\n\n\nbody: the data (usually JSON)"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-4",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-4",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "Think of an API response like an envelope you received in the mail."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-5",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#section-5",
+    "title": "Introduction to APIs in R",
+    "section": "",
+    "text": "On the outside of the envelope there is information like:\n\nThe address it was addressed to\nThe address where it came from\nThe postage date, which indicates when it was posted\n\n\nThis metadata, or “data about data”, tells you about the letter contained within — who sent it, to whom, and when?.\n\n\nIn an API response this is the API header. It contains information about the data being delivered.\n\n\nThe body of the API contains the actual contents of the letter (the data). These data are most commonly delivered as a JSON."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#what-is-json",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#what-is-json",
+    "title": "Introduction to APIs in R",
+    "section": "What is JSON?",
+    "text": "What is JSON?\nJSON stands for JavaScript Object Notation.\n\nIt’s the most common format for data exchanged through APIs.\n\n\nThink of JSON as a structured way of storing key–value pairs, like a list or dictionary in R or Python."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#json-structure",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#json-structure",
+    "title": "Introduction to APIs in R",
+    "section": "JSON Structure",
+    "text": "JSON Structure\nJSON objects are made of:\n\nKeys (the name of a data field)\nValues (the data associated with that key)\n\n\n{\n  \"name\": \"Pikachu\",\n  \"height\": 4,\n  \"weight\": 60,\n  \"abilities\": [\"static\", \"lightning-rod\"]\n}"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#status-code",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#status-code",
+    "title": "Introduction to APIs in R",
+    "section": "Status Code",
+    "text": "Status Code\nThe status code tells you whether the request succeeded or failed\n\nStatus codes are 3-digit numbers returned by the server:\n\n\n\n\n\n\n\n\n\n\nCode\nMeaning\nDescription\n\n\n\n\n200\n✅ OK\nThe request succeeded and data is returned.\n\n\n201\n🆕 Created\nA new resource was successfully created.\n\n\n400\n⚠️ Bad Request\nThe request was malformed or invalid.\n\n\n401\n🔐 Unauthorized\nMissing or invalid API key.\n\n\n403\n🚫 Forbidden\nYou don’t have permission to access the resource.\n\n\n404\n❓ Not Found\nThe endpoint or item doesn’t exist.\n\n\n429\n🕐 Too Many Requests\nYou’ve hit the API’s rate limit.\n\n\n500\n💥 Server Error\nSomething went wrong on the server side."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-endpoints",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-endpoints",
+    "title": "Introduction to APIs in R",
+    "section": "API Endpoints",
+    "text": "API Endpoints\nAn API endpoint is a gateway where data is sent and received.\nIn RESTful web APIs, this corresponds to a URL.\n\nhttps://pokeapi.co/api/v2/"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-endpoints-1",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-endpoints-1",
+    "title": "Introduction to APIs in R",
+    "section": "API Endpoints",
+    "text": "API Endpoints\nAn API endpoint is a gateway where data is sent and received.\nIn RESTful web APIs, this corresponds to a URL.\nhttps://pokeapi.co/api/v2/{endpoint}"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-documentation",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-documentation",
+    "title": "Introduction to APIs in R",
+    "section": "API Documentation",
+    "text": "API Documentation\nhttps://pokeapi.co/docs/v2#pokemon-section"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#abilities",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#abilities",
+    "title": "Introduction to APIs in R",
+    "section": "Abilities",
+    "text": "Abilities\nAbilities provide passive effects for Pokémon in battle or in the overworld.\n\nGET https://pokeapi.co/api/v2/ability\n\n\n{\n  \"count\": 367,\n  \"next\": \"https://pokeapi.co/api/v2/ability/?offset=20&limit=20\",\n  \"previous\": null,\n  \"results\": [\n    {\n      \"name\": \"stench\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/1/\"\n    },\n    {\n      \"name\": \"drizzle\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/2/\"\n    },\n    {\n      \"name\": \"speed-boost\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/3/\"\n    },\n    {\n      \"name\": \"battle-armor\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/4/\"\n    },\n    {\n      \"name\": \"sturdy\",\n      \"url\": \"https://pokeapi.co/api/v2/ability/5/\"\n    },"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#item",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#item",
+    "title": "Introduction to APIs in R",
+    "section": "Item",
+    "text": "Item\nAn item is an object in the games which the player can pick up, keep in their bag, and use in some manner. They have various uses, including healing, powering up, helping catch Pokémon, or to access a new area.\n\nGET https://pokeapi.co/api/v2/item\n\n\n{\n  \"count\": 2180,\n  \"next\": \"https://pokeapi.co/api/v2/item/?offset=20&limit=20\",\n  \"previous\": null,\n  \"results\": [\n    {\n      \"name\": \"master-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/1/\"\n    },\n    {\n      \"name\": \"ultra-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/2/\"\n    },\n    {\n      \"name\": \"great-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/3/\"\n    },\n    {\n      \"name\": \"poke-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/4/\"\n    },\n    {\n      \"name\": \"safari-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/5/\"\n    },\n    {\n      \"name\": \"net-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/6/\"\n    },\n    {\n      \"name\": \"dive-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/7/\"\n    },\n    {\n      \"name\": \"nest-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/8/\"\n    },\n    {\n      \"name\": \"repeat-ball\",\n      \"url\": \"https://pokeapi.co/api/v2/item/9/\""
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#pagination",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#pagination",
+    "title": "Introduction to APIs in R",
+    "section": "Pagination 📄",
+    "text": "Pagination 📄\nMany APIs return only part of the dataset at once.\n\nAddditionally, APIs often enact limits on the number of results that can be returned over a given time period.\n\n\nWhich parts of the dataset are returned are controlled by two parameters:\n\n\nlimit: how many records to return\n\n\noffset: how many records to skip\n\n\nTo get all results, you can loop over offsets:\n\n\nhttps://pokeapi.co/api/v2/item/?offset=20&limit=20"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-key",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-key",
+    "title": "Introduction to APIs in R",
+    "section": "API Key 🔑",
+    "text": "API Key 🔑\n\nMany APIs require something called an API Key\n\n\nAn API key is a unique code used to identify and authenticate a user or application when interacting with an API.\n\n\nAPI keys are generally a string of alphanumeric characters, and look something like this:\n\n\nzaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtlx\n\n\nAPI keys are a security measure to make sure you, or your application, are who you say you are."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-key-1",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#api-key-1",
+    "title": "Introduction to APIs in R",
+    "section": "API Key 🔑",
+    "text": "API Key 🔑\nAn API key is like an ID card. You wouldn’t leave your ID card laying around. Anyone could just pick it up and pretend they are you!\n\nIf you store plaintext API keys in code and share it (e.g., on GitHub), anyone with access can read it!\n\n\nlibrary(tidycensus)\nlibrary(tidyverse)\n\ncensus_api_key(\"zaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtl\")\n\n# Retrieve median age by sex (P13_001N) by state\nage_2020 &lt;- get_decennial(geography = \"state\", \n                       variables = \"P13_001N\", \n                       year = 2020,\n                       sumfile = \"dhc\")"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#how-do-we-protect-our-api-keys",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#how-do-we-protect-our-api-keys",
+    "title": "Introduction to APIs in R",
+    "section": "How do we protect our API keys?",
+    "text": "How do we protect our API keys?"
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#environment-variables",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#environment-variables",
+    "title": "Introduction to APIs in R",
+    "section": "Environment Variables",
+    "text": "Environment Variables\nA variable allows us to store information, and an environment is the system we execute our code on.\n\nEnvironment variables allow us to store information specific to a system in variables.\n\n\nEnvironment variables are not stored within our codebase, but are instead stored in a system specific configuration file.\n\n\nWe can use the environment variables configuration file to store our API key, and reference the configuration file in our code in order to load the API key."
+  },
+  {
+    "objectID": "PresentationMaterials/Introduction-to-APIs-in-R.html#environment-variables-in-r",
+    "href": "PresentationMaterials/Introduction-to-APIs-in-R.html#environment-variables-in-r",
+    "title": "Introduction to APIs in R",
+    "section": "Environment Variables in R",
+    "text": "Environment Variables in R\nIn R, environment variables can be stored in a text file with name-value pairs. Create a file in your home directory by running:\n\nfile.edit(\"~/.Renviron\")\n\n\nUsing the API key listed earlier, we would declare an environment variable in our .Renviron file:\nAPI_KEY = \"zaCELgL0imfnc8mVLWwsAawjYr4RxAf50DDqtlx\"\n\n\nNow we can update our code to retrieve our API environment variable:\nlibrary(tidycensus)\nlibrary(tidyverse)\n\n# Retrieve API key from .Renviron file\napi_key &lt;- Sys.getenv(\"API_KEY\")\ncensus_api_key(api_key)\n\n# Retrieve median age by sex (P13_001N) by state\nage_2020 &lt;- get_decennial(geography = \"state\", \n                       variables = \"P13_001N\", \n                       year = 2020,\n                       sumfile = \"dhc\")"
+  }
+]
