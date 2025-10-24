@@ -290,7 +290,7 @@ pokemon_names <-
 pokemon_names
 ```
 
-### Retreive statistics for each pokemon through multiple API calls
+### Retrieve statistics for each pokemon through multiple API calls
 
 In order to retrieve statsitics for each pokemon, we can iterate over each URL in `pokemon_names` and make a request for the specific pokemon endpoint represented by that url. To do this, we can build on our approach for extracting statistics from one pokemon, and build a function for multiple.
 
@@ -304,7 +304,7 @@ get_pokemon_details <- function(url) {
   ## a given time period, so we can use Sys.sleep to pause our
   ## function before each request to ensure we don't exceed 
   ## API limits.
-  Sys.sleep(.1)
+  Sys.sleep(.5)
   
 
   stats <- purrr:::map_df(
