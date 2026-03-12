@@ -1,5 +1,5 @@
 # Workshop Name
-[description]
+Introduction to APIs in R
 
 
 ## JHU Data Services   
